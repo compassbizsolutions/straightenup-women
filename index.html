@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Bloom Through It</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#6B3F4E">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<style>
+  :root{
+    --blush:#F7DCE0; --blush-dk:#EBB9C3; --coral:#D98A82; --plum:#6B3F4E;
+    --gold:#C89B6C; --sage:#A9BA9D; --cream:#FFF8F1; --text:#4A3238;
+    --rose:#B5495B; --line:#F0D9DD;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--blush); color:var(--text); -webkit-tap-highlight-color:transparent;
+  }
+  .app{ max-width:460px; margin:0 auto; min-height:100vh; background:var(--cream); position:relative; padding-bottom:24px; }
+  header.top{ background:var(--plum); color:#fff; padding:16px 14px 12px; display:flex; align-items:center; gap:8px; position:relative; }
+  header.top svg.logo{ flex-shrink:0; }
+  header.top .titles{ line-height:1.25; }
+  header.top .titles .t1{ font-family:Georgia,serif; font-size:19px; font-weight:700; }
+  header.top .titles .t2{ font-size:11.5px; color:var(--blush); font-style:italic; }
+  .header-actions{ margin-left:auto; display:flex; align-items:center; gap:4px; }
+  .icon-btn{ background:rgba(255,255,255,0.12); border:none; border-radius:50%; width:34px; height:34px;
+             display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; position:relative; }
+  .icon-btn svg{ width:18px; height:18px; }
+
+  .popover{ position:absolute; top:52px; right:14px; background:#fff; color:var(--text); border-radius:12px;
+             box-shadow:0 6px 20px rgba(0,0,0,0.18); padding:12px; width:250px; z-index:60; display:none; }
+  .popover.open{ display:block; }
+  .popover .cal-nav{ margin-bottom:6px; }
+  .popover .cal-nav button{ font-size:15px; }
+
+  .menu-panel{ position:absolute; top:52px; right:14px; background:#fff; color:var(--text); border-radius:12px;
+               box-shadow:0 6px 20px rgba(0,0,0,0.18); width:220px; z-index:60; display:none; overflow:hidden; }
+  .menu-panel.open{ display:block; }
+  .menu-item{ padding:12px 16px; font-size:13.5px; cursor:pointer; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:10px; }
+  .menu-item:last-child{ border-bottom:none; }
+  .menu-item:active{ background:var(--blush); }
+  .menu-item svg{ width:16px; height:16px; color:var(--coral); flex-shrink:0; }
+
+  .day-badge{ font-size:11px; color:var(--blush); margin-top:2px; }
+  .overlay-scrim{ position:fixed; inset:0; z-index:55; display:none; }
+  .overlay-scrim.open{ display:block; }
+
+  main{ padding:16px 16px 20px; }
+  section{ display:none; }
+  section.active{ display:block; }
+
+  h2.sec-title{ font-family:Georgia,serif; color:var(--plum); font-size:19px; margin:2px 0 4px; display:flex; align-items:center; gap:6px; }
+  p.sec-sub{ font-size:12.5px; color:var(--rose); font-style:italic; margin:0 0 12px; }
+  hr.rule{ border:none; border-top:1px solid var(--coral); margin:0 0 12px; }
+
+  label.field-label{ display:block; font-weight:700; font-size:12.5px; color:var(--plum); margin:10px 0 3px; }
+  input[type=text], input[type=time], input[type=date], textarea, select{
+    width:100%; border:none; border-bottom:1px solid var(--blush-dk); background:transparent;
+    font-size:14px; padding:5px 2px; color:var(--text); font-family:inherit;
+  }
+  input:focus, textarea:focus, select:focus{ outline:none; border-bottom:1.5px solid var(--coral); }
+  textarea{ resize:vertical; min-height:32px; }
+
+  .water-row{ display:flex; justify-content:space-between; margin:6px 0 12px; }
+  .glass{ width:28px; height:38px; cursor:pointer; }
+  .glass svg{ width:100%; height:100%; }
+
+  .radio-pills{ display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 8px; }
+  .pill{ border:1px solid var(--blush-dk); border-radius:16px; padding:5px 12px; font-size:12.5px; cursor:pointer; background:#fff; color:var(--text); }
+  .pill.selected{ background:var(--coral); border-color:var(--coral); color:#fff; }
+
+  .two-col{ display:flex; gap:10px; }
+  .two-col > div{ flex:1; }
+
+  .symptom-row{ display:flex; align-items:center; gap:8px; margin:8px 0; }
+  .symptom-row .name{ flex:1; font-size:12.5px; }
+  .symptom-row input[type=range]{ flex:1.3; }
+  .symptom-row .val{ width:20px; text-align:right; font-size:12.5px; font-weight:700; color:var(--coral); }
+
+  button.save-btn{
+    width:100%; margin-top:16px; padding:12px; background:var(--plum); color:#fff; border:none;
+    border-radius:24px; font-size:14.5px; font-weight:700; cursor:pointer;
+  }
+  button.save-btn:active{ opacity:0.85; }
+  .toast{
+    position:fixed; left:50%; transform:translateX(-50%); bottom:90px; background:var(--plum); color:#fff;
+    padding:9px 18px; border-radius:20px; font-size:13px; opacity:0; transition:opacity .25s; pointer-events:none; z-index:50;
+  }
+  .toast.show{ opacity:1; }
+
+  /* Cycle tab */
+  .cal-nav{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+  .cal-nav button{ background:none; border:none; font-size:18px; color:var(--plum); cursor:pointer; padding:4px 10px; }
+  .cal-nav .month-label{ font-weight:700; color:var(--plum); font-size:14.5px; }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; text-align:center; }
+  .cal-grid .dow{ font-size:10.5px; color:var(--rose); font-weight:700; padding-bottom:2px; }
+  .cal-day{ aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:50%;
+             font-size:12.5px; cursor:pointer; border:1px solid transparent; }
+  .cal-day.empty{ visibility:hidden; }
+  .cal-day.today{ border-color:var(--plum); }
+  .cal-day.light{ background:#F6D3D9; }
+  .cal-day.medium{ background:#E79AAA; color:#fff; }
+  .cal-day.heavy{ background:var(--rose); color:#fff; }
+  .cycle-summary{ background:var(--blush); border-radius:12px; padding:12px 14px; margin:14px 0; font-size:12.5px; line-height:1.5; }
+  .cycle-legend{ display:flex; gap:12px; font-size:11px; margin-top:8px; color:var(--text); }
+  .cycle-legend span{ display:inline-flex; align-items:center; gap:4px; }
+  .dot{ width:10px; height:10px; border-radius:50%; display:inline-block; }
+  .menopause-note{ background:#FFF3E0; border:1px solid var(--gold); border-radius:10px; padding:10px 12px; font-size:12px; margin-top:10px; }
+
+  /* Recipes */
+  details.recipe{ background:var(--blush); border:1px solid var(--blush-dk); border-radius:10px; margin-bottom:8px; padding:8px 12px; }
+  details.recipe summary{ font-weight:700; color:var(--plum); font-size:13.5px; cursor:pointer; }
+  details.recipe .body{ font-size:12px; margin-top:8px; line-height:1.5; }
+  .cat-tabs{ display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
+  .cat-tab{ border:1px solid var(--coral); color:var(--coral); background:#fff; border-radius:16px; padding:6px 12px; font-size:12px; cursor:pointer; }
+  .cat-tab.selected{ background:var(--coral); color:#fff; }
+  .recipe-list{ display:none; }
+  .recipe-list.active{ display:block; }
+
+  /* Workouts */
+  table.wk{ width:100%; border-collapse:collapse; font-size:12px; }
+  table.wk th{ background:var(--coral); color:#fff; padding:6px 8px; text-align:left; font-size:11.5px; }
+  table.wk td{ padding:7px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  table.wk tr:nth-child(even) td{ background:var(--blush); }
+
+  /* Labs */
+  .milestone-tabs{ display:flex; gap:6px; margin-bottom:12px; }
+  .milestone-tab{ flex:1; text-align:center; border:1px solid var(--blush-dk); border-radius:8px; padding:7px 4px; font-size:11.5px; cursor:pointer; background:#fff; }
+  .milestone-tab.selected{ background:var(--plum); color:#fff; border-color:var(--plum); }
+  .hormone-row{ display:grid; grid-template-columns:1.3fr 1fr; gap:6px; align-items:center; margin:6px 0; }
+  .hormone-row label{ font-size:12px; font-weight:600; color:var(--plum); }
+
+  #printReport{ display:none; }
+  #printReport table{ width:100%; border-collapse:collapse; font-size:9.5px; margin-bottom:14px; }
+  #printReport th, #printReport td{ border:1px solid #ccc; padding:3px 5px; text-align:left; }
+  #printReport th{ background:var(--blush); }
+  @media print{
+    body *{ visibility:hidden; }
+    #printReport, #printReport *{ visibility:visible; }
+    #printReport{ display:block; position:absolute; top:0; left:0; width:100%; padding:20px; }
+  }
+
+  nav.tabbar{ position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:460px;
+              background:#fff; border-top:1px solid var(--line); display:flex; z-index:40; }
+  nav.tabbar button{ flex:1; background:none; border:none; padding:9px 2px 8px; display:flex; flex-direction:column;
+                      align-items:center; gap:2px; color:var(--text); font-size:10px; cursor:pointer; }
+  nav.tabbar button.active{ color:var(--coral); }
+  nav.tabbar svg{ width:20px; height:20px; }
+
+  .acc{ border:1px solid var(--blush-dk); border-radius:10px; margin-bottom:8px; overflow:hidden; }
+  .acc-header{ display:flex; justify-content:space-between; align-items:center; padding:10px 12px;
+                background:var(--blush); font-weight:700; font-size:13px; color:var(--plum); cursor:pointer; }
+  .acc-header .caret{ transition:transform .15s; color:var(--coral); font-size:12px; }
+  .acc-header.open .caret{ transform:rotate(90deg); }
+  .acc-body{ display:none; padding:10px 12px 12px; }
+  .acc-body.open{ display:block; }
+  .same-yesterday-btn{ display:inline-block; margin-bottom:8px; background:var(--gold); border-color:var(--gold); color:#fff; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <svg class="logo" width="24" height="24" viewBox="-15 -15 30 30"><path d="M0,0 L14,2 L2,4 L4,14 L0,2 L-4,14 L-2,4 L-14,2 Z" fill="none" stroke="#F7DCE0" stroke-width="1.2"/></svg>
+    <div class="titles">
+      <div class="t1">Bloom Through It</div>
+      <div class="day-badge" id="dayBadge">Day 1</div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="calBtn" aria-label="Jump to date">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+      </button>
+      <button class="icon-btn" id="menuBtn" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <div class="popover" id="jumpCalPopover">
+        <div class="cal-nav">
+          <button id="jumpPrevMonth">&#8249;</button>
+          <span class="month-label" id="jumpMonthLabel"></span>
+          <button id="jumpNextMonth">&#8250;</button>
+        </div>
+        <div class="cal-grid" id="jumpCalGrid"></div>
+      </div>
+      <div class="menu-panel" id="menuPanel"></div>
+    </div>
+  </header>
+  <div class="overlay-scrim" id="overlayScrim"></div>
+
+  <main>
+    <section id="tab-today" class="active">
+      <h2 class="sec-title" id="todayHeading">Today</h2>
+      <p class="sec-sub" id="todayDateLabel"></p>
+      <div id="backToTodayWrap" style="display:none; margin-bottom:8px;">
+        <span class="pill" id="backToTodayBtn" style="background:var(--gold); border-color:var(--gold); color:#fff;">Jump back to today</span>
+      </div>
+      <hr class="rule">
+
+      <div class="acc">
+        <div class="acc-header" data-target="acc-water"><span>Water intake</span><span class="caret">&#9656;</span></div>
+        <div class="acc-body" id="acc-water">
+          <div class="pill same-yesterday-btn" id="sameYesterdayWater">&#8635; Same as yesterday</div>
+          <label class="field-label">Tap each glass</label>
+          <div class="water-row" id="waterRow"></div>
+        </div>
+      </div>
+
+      <div class="acc">
+        <div class="acc-header" data-target="acc-meals"><span>Meals</span><span class="caret">&#9656;</span></div>
+        <div class="acc-body" id="acc-meals">
+          <div class="pill same-yesterday-btn" id="sameYesterdayMeals">&#8635; Same as yesterday</div>
+          <label class="field-label">Breakfast</label>
+          <input type="text" id="f_breakfast" placeholder="What did you eat?">
+          <label class="field-label">Lunch</label>
+          <input type="text" id="f_lunch" placeholder="What did you eat?">
+          <label class="field-label">Dinner</label>
+          <input type="text" id="f_dinner" placeholder="What did you eat?">
+          <label class="field-label">Snack</label>
+          <input type="text" id="f_snack" placeholder="What did you eat?">
+        </div>
+      </div>
+
+      <div class="acc">
+        <div class="acc-header" data-target="acc-supplements"><span>Supplements & dosages</span><span class="caret">&#9656;</span></div>
+        <div class="acc-body" id="acc-supplements">
+          <div class="pill" id="sameAsYesterdayBtn" style="display:inline-block; margin-bottom:6px; background:var(--gold); border-color:var(--gold); color:#fff;">&#8635; Same as yesterday</div>
+          <div id="supplementRows"></div>
+          <div class="pill" id="addSupplementBtn" style="display:inline-block; margin-top:4px;">+ Add supplement</div>
+        </div>
+      </div>
+
+      <div class="acc">
+        <div class="acc-header" data-target="acc-hrt"><span>Hormone / HRT taken</span><span class="caret">&#9656;</span></div>
+        <div class="acc-body" id="acc-hrt">
+          <div class="pill same-yesterday-btn" id="sameYesterdayHrt">&#8635; Same as yesterday</div>
+          <input type="text" id="f_hrt" placeholder="Medication & dose">
+        </div>
+      </div>
+
+      <div class="acc">
+        <div class="acc-header" data-target="acc-exercise"><span>Exercise / workout</span><span class="caret">&#9656;</span></div>
+        <div class="acc-body" id="acc-exercise">
+          <div class="pill same-yesterday-btn" id="sameYesterdayExercise">&#8635; Same as yesterday</div>
+          <div id="exerciseRows"></div>
+          <div class="pill" id="addExerciseBtn" style="display:inline-block; margin-top:4px;">+ Add exercise</div>
+        </div>
+      </div>
+
+      <div class="acc">
+        <div class="acc-header" data-target="acc-sleep"><span>Sleep</span><span class="caret">&#9656;</span></div>
+        <div class="acc-body" id="acc-sleep">
+          <div class="pill same-yesterday-btn" id="sameYesterdaySleep">&#8635; Same as yesterday</div>
+          <div class="two-col">
+            <div>
+              <label class="field-label" style="margin-top:0;">Fell asleep (last night)</label>
+              <input type="time" id="f_bedtime">
+            </div>
+            <div>
+              <label class="field-label" style="margin-top:0;">Woke up (this morning)</label>
+              <input type="time" id="f_waketime">
+            </div>
+          </div>
+          <div class="radio-pills" id="sleepQualityPills"></div>
+          <div class="radio-pills" id="wokeNightPills"></div>
+          <input type="text" id="f_wokeTime" placeholder="What time did you wake? (2-3am is common)" style="margin-top:4px;">
+          <div class="radio-pills" id="nightSweatPills"></div>
+        </div>
+      </div>
+
+      <div class="acc">
+        <div class="acc-header" data-target="acc-symptoms"><span>Symptoms & how bad (1-10)</span><span class="caret">&#9656;</span></div>
+        <div class="acc-body" id="acc-symptoms">
+          <div class="pill same-yesterday-btn" id="sameYesterdaySymptoms">&#8635; Same as yesterday</div>
+          <div id="symptomList"></div>
+        </div>
+      </div>
+
+      <div class="acc">
+        <div class="acc-header" data-target="acc-reflection"><span>Reflection</span><span class="caret">&#9656;</span></div>
+        <div class="acc-body" id="acc-reflection">
+          <div class="pill same-yesterday-btn" id="sameYesterdayReflection">&#8635; Same as yesterday</div>
+          <label class="field-label">Overall, today was</label>
+          <div class="radio-pills" id="moodPills"></div>
+          <label class="field-label">Anything else I felt today</label>
+          <textarea id="f_feeling" rows="2"></textarea>
+          <label class="field-label">How do I feel the supplements / HRT are working?</label>
+          <textarea id="f_hrtWorking" rows="2"></textarea>
+          <label class="field-label">Notes</label>
+          <textarea id="f_notes" rows="2"></textarea>
+        </div>
+      </div>
+
+      <button class="save-btn" id="saveToday">Save today's entry</button>
+    </section>
+
+    <section id="tab-cycle">
+      <h2 class="sec-title">Cycle</h2>
+      <p class="sec-sub">Perimenopausal periods still happen &mdash; track them here.</p>
+      <hr class="rule">
+      <div class="cal-nav">
+        <button id="prevMonth">&#8249;</button>
+        <span class="month-label" id="monthLabel"></span>
+        <button id="nextMonth">&#8250;</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="cycle-legend">
+        <span><span class="dot" style="background:#F6D3D9"></span>Light</span>
+        <span><span class="dot" style="background:#E79AAA"></span>Medium</span>
+        <span><span class="dot" style="background:#B5495B"></span>Heavy</span>
+      </div>
+      <div class="cycle-summary" id="cycleSummary"></div>
+      <div id="menopauseNote"></div>
+    </section>
+
+    <section id="tab-recipes">
+      <h2 class="sec-title">Recipe book</h2>
+      <p class="sec-sub">Cortisol-calming, blood-sugar-friendly, made for real life.</p>
+      <hr class="rule">
+      <div class="cat-tabs" id="catTabs"></div>
+      <div id="recipeContainer"></div>
+    </section>
+
+    <section id="tab-moves">
+      <h2 class="sec-title">Weekly movement rhythm</h2>
+      <p class="sec-sub">Balanced, not brutal &mdash; repeat across all 120 days.</p>
+      <hr class="rule">
+      <table class="wk" id="wkTable"></table>
+    </section>
+
+    <section id="tab-labs">
+      <h2 class="sec-title">Know your numbers</h2>
+      <p class="sec-sub">Log as many lab draws over time as you want.</p>
+      <hr class="rule">
+      <div style="display:flex; gap:6px; margin-bottom:10px;">
+        <select id="l_dateSelect" style="flex:1.4; height:34px; border:1px solid var(--blush-dk); border-radius:6px; font-size:12.5px; background:#fff;"></select>
+        <span class="pill" id="newLabEntryBtn" style="white-space:nowrap;">+ New entry</span>
+      </div>
+      <label class="field-label">Date of labs</label>
+      <input type="date" id="l_recordDate">
+      <label class="field-label">Testing method</label>
+      <input type="text" id="l_date" placeholder="Rythm Health, Genova, in-office draw...">
+      <label class="field-label">Provider / consultation date</label>
+      <input type="text" id="l_provider">
+      <div id="hormoneFields"></div>
+      <span class="pill" id="addMarkerBtn">+ Add another marker</span>
+      <button class="save-btn" id="saveLabs">Save lab entry</button>
+    </section>
+
+    <section id="tab-hrt">
+      <h2 class="sec-title">HRT tracking</h2>
+      <p class="sec-sub">Scripts, dosages & appointments &mdash; linked to the same lab entry dates.</p>
+      <hr class="rule">
+      <div style="display:flex; gap:6px; margin-bottom:10px;">
+        <select id="h_dateSelect" style="flex:1.4; height:34px; border:1px solid var(--blush-dk); border-radius:6px; font-size:12.5px; background:#fff;"></select>
+        <span class="pill" id="newHrtEntryBtn" style="white-space:nowrap;">+ New entry</span>
+      </div>
+      <label class="field-label">Medications & dosages</label>
+      <div id="hrtMedRows"></div>
+      <div class="pill" id="addHrtMedBtn" style="display:inline-block; margin-top:2px;">+ Add medication</div>
+
+      <label class="field-label">Pharmacy / refill notes</label>
+      <input type="text" id="h_pharmacy">
+      <label class="field-label">Provider notes / dosage changes</label>
+      <textarea id="h_providerNotes" rows="2"></textarea>
+      <label class="field-label">Next lab recheck / appointment date</label>
+      <input type="text" id="h_nextDate">
+      <label class="field-label">Questions for my provider</label>
+      <textarea id="h_questions" rows="2"></textarea>
+      <button class="save-btn" id="saveHrt">Save HRT entry</button>
+    </section>
+
+    <section id="tab-supplements">
+      <h2 class="sec-title">Supplement guide</h2>
+      <p class="sec-sub">The core lineup worth knowing about for this season of life.</p>
+      <hr class="rule">
+      <div id="suppTable"></div>
+      <p style="font-size:11.5px; margin-top:10px; color:var(--text);">Log what you actually took each day on the Today page &mdash; this page is just your reference list.</p>
+    </section>
+
+    <section id="tab-export">
+      <h2 class="sec-title">Export for your doctor</h2>
+      <p class="sec-sub">Supplements, symptoms & labs side by side, so you can spot what's connected to what.</p>
+      <hr class="rule">
+      <button class="save-btn" id="downloadCsvBtn">Download daily log (CSV)</button>
+      <button class="save-btn" id="downloadLabsCsvBtn" style="background:var(--coral);">Download labs & HRT (CSV)</button>
+      <button class="save-btn" id="printReportBtn" style="background:var(--gold);">Print / save as PDF report</button>
+      <p style="font-size:11.5px; margin-top:10px;">CSV files open in Excel or Google Sheets &mdash; sort or filter by symptom, supplement, or date to look for patterns. The PDF report is formatted to hand to a provider.</p>
+    </section>
+  </main>
+
+<div class="toast" id="toast"></div>
+</div>
+<div id="printReport"></div>
+
+<div id="disclaimerOverlay" style="display:none; position:fixed; inset:0; z-index:200; background:var(--cream);
+     overflow-y:auto; -webkit-overflow-scrolling:touch;">
+  <div style="max-width:460px; margin:0 auto; padding:32px 22px 28px;">
+    <svg width="30" height="30" viewBox="-15 -15 30 30" style="display:block; margin:0 auto 14px;">
+      <path d="M0,0 L14,2 L2,4 L4,14 L0,2 L-4,14 L-2,4 L-14,2 Z" fill="none" stroke="#6B3F4E" stroke-width="1.2"/>
+    </svg>
+    <h2 style="font-family:Georgia,serif; color:var(--plum); text-align:center; font-size:21px; margin:0 0 18px;">Welcome to Bloom Through It</h2>
+
+    <div style="background:var(--blush); border-radius:12px; padding:14px 16px; margin-bottom:14px; font-size:13px; line-height:1.6;">
+      <strong style="color:var(--plum);">This isn't medical advice.</strong> Bloom Through It is a personal tracking tool, not a diagnosis, treatment plan, or substitute for care from a doctor or qualified provider. Always talk to your physician or a functional-medicine provider before starting, stopping, or changing any supplement, medication, or HRT regimen &mdash; especially given possible interactions with medications you may already take.
+    </div>
+
+    <div style="background:#FFF3E0; border:1px solid var(--gold); border-radius:12px; padding:14px 16px; margin-bottom:22px; font-size:13px; line-height:1.6;">
+      <strong style="color:var(--plum);">Your data stays on your device.</strong> Everything you log &mdash; symptoms, cycle dates, labs, HRT &mdash; is stored privately in your phone or browser's own storage. It is never uploaded to a server or shared with us or anyone else. Uninstalling the app or clearing your browser data will permanently delete it, so use the Export tab regularly if you'd like a backup or a copy for your doctor.
+    </div>
+
+    <div style="display:flex; align-items:flex-start; gap:8px; margin-bottom:20px;">
+      <input type="checkbox" id="disclaimerCheck" style="margin-top:3px; width:16px; height:16px; flex-shrink:0;">
+      <label for="disclaimerCheck" style="font-size:12.5px; line-height:1.5;">I understand this app does not provide medical advice, and I'll consult my doctor or provider about my own health, supplements, and HRT.</label>
+    </div>
+
+    <button class="save-btn" id="disclaimerContinue" disabled style="opacity:0.5;">Continue to my tracker</button>
+  </div>
+</div>
+
+<script>
+const START_DATE_KEY = 'programStartDate';
+let programStart = null;
+
+function todayISO(d){ d = d || new Date(); return d.toISOString().slice(0,10); }
+
+/* ---------- Local storage engine (IndexedDB) ---------- */
+/* Replaces the Claude-Artifacts-only window.storage API so this app works
+   as a real, standalone deployed product. All data stays on the user's
+   own device -- nothing is sent to a server. */
+const DB_NAME = 'straightenup_women_health';
+const STORE_NAME = 'kv';
+let _dbPromise = null;
+function openDB(){
+  if(_dbPromise) return _dbPromise;
+  _dbPromise = new Promise((resolve, reject)=>{
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = ()=>{ req.result.createObjectStore(STORE_NAME); };
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  });
+  return _dbPromise;
+}
+async function storageGet(key){
+  try{
+    const db = await openDB();
+    return await new Promise((resolve)=>{
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const req = tx.objectStore(STORE_NAME).get(key);
+      req.onsuccess = ()=> resolve(req.result != null ? JSON.parse(req.result) : null);
+      req.onerror = ()=> resolve(null);
+    });
+  } catch(e){ return null; }
+}
+async function storageSet(key, value){
+  try{
+    const db = await openDB();
+    return await new Promise((resolve)=>{
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      tx.objectStore(STORE_NAME).put(JSON.stringify(value), key);
+      tx.oncomplete = ()=> resolve(true);
+      tx.onerror = ()=> resolve(false);
+    });
+  } catch(e){ return false; }
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+/* ---------- Collapsible sections (closed by default) ---------- */
+document.querySelectorAll('.acc-header').forEach(h=>{
+  h.addEventListener('click', ()=>{
+    const body = document.getElementById(h.dataset.target);
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    h.classList.toggle('open', !isOpen);
+  });
+});
+
+/* ---------- Section switching ---------- */
+const MENU_ITEMS = [
+  {tab:'today', label:'Today / Journal', icon:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'},
+  {tab:'cycle', label:'Period tracker', icon:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'},
+  {tab:'recipes', label:'Recipe book', icon:'<path d="M4 19V6a2 2 0 0 1 2-2h12a1 1 0 0 1 1 1v14"/><path d="M4 19a2 2 0 0 0 2 2h12"/>'},
+  {tab:'moves', label:'Workouts', icon:'<circle cx="12" cy="5" r="2"/><path d="M7 21l2-8-2-3 3-3 2 2 2-2 3 3-2 3 2 8"/>'},
+  {tab:'supplements', label:'Supplement guide', icon:'<path d="M12 2v6M8 6h8l2 14H6z"/>'},
+  {tab:'labs', label:'Lab tracking', icon:'<path d="M9 3h6M10 3v5l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/>'},
+  {tab:'hrt', label:'HRT tracking', icon:'<path d="M12 2l2.5 5H20l-4 4 1.5 6L12 14l-5.5 3L8 11 4 7h5.5z"/>'},
+  {tab:'export', label:'Export for doctor', icon:'<path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/>'},
+];
+function renderMenu(){
+  const m = document.getElementById('menuPanel');
+  m.innerHTML='';
+  MENU_ITEMS.forEach(item=>{
+    const el = document.createElement('div');
+    el.className='menu-item';
+    el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">${item.icon}</svg>${item.label}`;
+    el.addEventListener('click', ()=>{
+      showSection(item.tab);
+      closeAllPopovers();
+    });
+    m.appendChild(el);
+  });
+}
+function showSection(tab){
+  document.querySelectorAll('main section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+function closeAllPopovers(){
+  document.getElementById('menuPanel').classList.remove('open');
+  document.getElementById('jumpCalPopover').classList.remove('open');
+  document.getElementById('overlayScrim').classList.remove('open');
+}
+document.getElementById('menuBtn').addEventListener('click', ()=>{
+  const open = document.getElementById('menuPanel').classList.contains('open');
+  closeAllPopovers();
+  if(!open){ document.getElementById('menuPanel').classList.add('open'); document.getElementById('overlayScrim').classList.add('open'); }
+});
+document.getElementById('calBtn').addEventListener('click', ()=>{
+  const open = document.getElementById('jumpCalPopover').classList.contains('open');
+  closeAllPopovers();
+  if(!open){
+    jumpCalYear = new Date().getFullYear(); jumpCalMonth = new Date().getMonth();
+    renderJumpCalendar();
+    document.getElementById('jumpCalPopover').classList.add('open');
+    document.getElementById('overlayScrim').classList.add('open');
+  }
+});
+document.getElementById('overlayScrim').addEventListener('click', closeAllPopovers);
+
+/* ---------- Jump-to-date mini calendar ---------- */
+let jumpCalYear, jumpCalMonth;
+function renderJumpCalendar(){
+  const grid = document.getElementById('jumpCalGrid');
+  grid.innerHTML='';
+  ['S','M','T','W','T','F','S'].forEach(d=>{ const el=document.createElement('div'); el.className='dow'; el.textContent=d; grid.appendChild(el); });
+  const first = new Date(jumpCalYear, jumpCalMonth, 1);
+  const startDow = first.getDay();
+  const daysInMonth = new Date(jumpCalYear, jumpCalMonth+1, 0).getDate();
+  const todayStr = todayISO();
+  for(let i=0;i<startDow;i++){ const e=document.createElement('div'); e.className='cal-day empty'; grid.appendChild(e); }
+  for(let day=1; day<=daysInMonth; day++){
+    const iso = jumpCalYear+'-'+String(jumpCalMonth+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+    const el = document.createElement('div');
+    el.className='cal-day'+(iso===todayStr?' today':'')+(iso===selectedDate?' medium':'');
+    el.style.cursor='pointer';
+    el.textContent = day;
+    el.addEventListener('click', async ()=>{
+      selectedDate = iso;
+      await loadDay(selectedDate);
+      showSection('today');
+      closeAllPopovers();
+    });
+    grid.appendChild(el);
+  }
+  document.getElementById('jumpMonthLabel').textContent = first.toLocaleDateString(undefined,{month:'long', year:'numeric'});
+}
+document.getElementById('jumpPrevMonth').addEventListener('click', ()=>{ jumpCalMonth--; if(jumpCalMonth<0){jumpCalMonth=11; jumpCalYear--;} renderJumpCalendar(); });
+document.getElementById('jumpNextMonth').addEventListener('click', ()=>{ jumpCalMonth++; if(jumpCalMonth>11){jumpCalMonth=0; jumpCalYear++;} renderJumpCalendar(); });
+
+document.getElementById('backToTodayBtn').addEventListener('click', async ()=>{
+  selectedDate = todayISO();
+  await loadDay(selectedDate);
+});
+
+/* ---------- Day badge & date label ---------- */
+let selectedDate = todayISO();
+async function initDayBadge(){
+  let start = await storageGet(START_DATE_KEY);
+  if(!start){ start = todayISO(); await storageSet(START_DATE_KEY, start); }
+  programStart = new Date(start+'T00:00:00');
+}
+function updateDateHeader(){
+  const d = new Date(selectedDate+'T00:00:00');
+  const diff = Math.floor((d - programStart)/86400000) + 1;
+  document.getElementById('dayBadge').textContent = 'Day ' + Math.max(1, diff);
+  document.getElementById('todayHeading').textContent = (selectedDate===todayISO()) ? 'Today' : 'Journal entry';
+  document.getElementById('todayDateLabel').textContent = d.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric', year:'numeric'});
+  document.getElementById('backToTodayWrap').style.display = (selectedDate===todayISO()) ? 'none' : 'block';
+}
+
+/* ---------- Water ---------- */
+const GLASS_SVG = fill => `<svg viewBox="0 0 24 32"><path d="M4 2h16l-2 28H6L4 2z" fill="${fill}" stroke="#D98A82" stroke-width="1.5"/></svg>`;
+let waterCount = 0;
+function renderWater(){
+  const row = document.getElementById('waterRow');
+  row.innerHTML='';
+  for(let i=0;i<8;i++){
+    const g = document.createElement('div');
+    g.className='glass';
+    g.innerHTML = GLASS_SVG(i < waterCount ? '#D98A82' : 'none');
+    g.addEventListener('click', ()=>{ waterCount = (i+1===waterCount) ? i : i+1; renderWater(); });
+    row.appendChild(g);
+  }
+}
+
+/* ---------- Pills helper ---------- */
+function renderPills(containerId, options, selectedVal, onSelect){
+  const c = document.getElementById(containerId);
+  c.innerHTML='';
+  let sel = selectedVal;
+  options.forEach(opt=>{
+    const p = document.createElement('div');
+    p.className='pill' + (opt.value===sel?' selected':'');
+    p.textContent = opt.label;
+    p.addEventListener('click', ()=>{
+      sel = opt.value;
+      Array.from(c.children).forEach(ch=>ch.classList.remove('selected'));
+      p.classList.add('selected');
+      onSelect(sel);
+    });
+    c.appendChild(p);
+  });
+  return ()=>sel;
+}
+
+/* ---------- Symptoms ---------- */
+const SYMPTOMS = ["Hot flashes","Night sweats","Mood swings / irritability","Brain fog","Anxiety","Fatigue","Joint / muscle aches","Headaches"];
+let symptomVals = {};
+function renderSymptoms(){
+  const c = document.getElementById('symptomList');
+  c.innerHTML='';
+  SYMPTOMS.forEach(name=>{
+    if(!(name in symptomVals)) symptomVals[name]=0;
+    const row = document.createElement('div');
+    row.className='symptom-row';
+    row.innerHTML = `<span class="name">${name}</span><input type="range" min="0" max="10" step="1" value="${symptomVals[name]}"><span class="val">${symptomVals[name]}</span>`;
+    const range = row.querySelector('input');
+    const val = row.querySelector('.val');
+    range.addEventListener('input', ()=>{ symptomVals[name]=Number(range.value); val.textContent=range.value; });
+    c.appendChild(row);
+  });
+}
+
+const DOSE_UNITS = ['mg','mcg','IU','mL','g','other'];
+function parseDose(str){
+  if(!str) return {amt:'', unit:'mg'};
+  const m = String(str).trim().match(/^([\d.\/\-]+)\s*([a-zA\u00b5]+)?$/i);
+  if(m && m[2]){
+    let raw = m[2].toLowerCase();
+    let unit = 'other';
+    if(raw==='mg') unit='mg';
+    else if(raw==='mcg'||raw==='\u00b5g'||raw==='ug') unit='mcg';
+    else if(raw==='iu') unit='IU';
+    else if(raw==='ml') unit='mL';
+    else if(raw==='g') unit='g';
+    return {amt:m[1], unit};
+  }
+  return {amt:str, unit:'mg'};
+}
+function formatDose(amt, unit){
+  if(!amt) return '';
+  return `${amt} ${unit||'mg'}`.trim();
+}
+
+const TIME_OF_DAY = ['Morning','Afternoon','Evening','Bedtime','With food','Other'];
+
+let currentSupplementRows = [{name:'',dose:'',time:''}];
+function renderSupplementRows(){
+  const c = document.getElementById('supplementRows');
+  c.innerHTML='';
+  currentSupplementRows.forEach((r, idx)=>{
+    const isOther = r.name && !SUPPLEMENTS_GUIDE.some(s=>s[0]===r.name);
+    const parsed = parseDose(r.dose);
+    const row = document.createElement('div');
+    row.style.cssText = 'border:1px solid var(--blush-dk); border-radius:8px; padding:7px; margin-bottom:7px; background:#fffdfb;';
+    row.innerHTML = `
+      <div style="display:flex; gap:5px; align-items:center; margin-bottom:5px;">
+        <select class="supp-select" style="flex:1; height:32px; border:1px solid var(--blush-dk); border-radius:6px; font-size:12px; background:#fff;">
+          <option value="">Select...</option>
+          ${SUPPLEMENTS_GUIDE.map(s=>`<option value="${s[0]}" ${r.name===s[0]?'selected':''}>${s[0]}</option>`).join('')}
+          <option value="__other__" ${isOther?'selected':''}>Other...</option>
+        </select>
+        <input type="text" class="supp-other" placeholder="Name" style="flex:1; display:${isOther?'block':'none'}; border:1px solid var(--blush-dk); border-radius:6px; height:30px; padding:0 6px; font-size:12px;" value="${isOther?r.name:''}">
+        <span class="supp-remove" style="cursor:pointer; color:var(--rose); font-weight:700; font-size:16px; padding:0 4px;">&times;</span>
+      </div>
+      <div style="display:flex; gap:5px;">
+        <input type="text" class="supp-amt" placeholder="Amount" style="flex:0.8; border:1px solid var(--blush-dk); border-radius:6px; height:30px; padding:0 6px; font-size:12px;" value="${parsed.amt}">
+        <select class="supp-unit" style="flex:0.8; border:1px solid var(--blush-dk); border-radius:6px; height:30px; font-size:12px; background:#fff;">
+          ${DOSE_UNITS.map(u=>`<option value="${u}" ${parsed.unit===u?'selected':''}>${u}</option>`).join('')}
+        </select>
+        <select class="supp-time" style="flex:1; border:1px solid var(--blush-dk); border-radius:6px; height:30px; font-size:12px; background:#fff;">
+          <option value="">Time...</option>
+          ${TIME_OF_DAY.map(t=>`<option value="${t}" ${r.time===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+    `;
+    row.querySelector('.supp-select').addEventListener('change', e=>{
+      row.querySelector('.supp-other').style.display = e.target.value==='__other__' ? 'block' : 'none';
+    });
+    row.querySelector('.supp-remove').addEventListener('click', ()=>{
+      currentSupplementRows.splice(idx,1);
+      if(currentSupplementRows.length===0) currentSupplementRows.push({name:'',dose:'',time:''});
+      renderSupplementRows();
+    });
+    c.appendChild(row);
+  });
+}
+function collectSupplementRows(){
+  return Array.from(document.querySelectorAll('#supplementRows > div')).map(row=>{
+    const sel = row.querySelector('.supp-select').value;
+    const other = row.querySelector('.supp-other').value;
+    const amt = row.querySelector('.supp-amt').value;
+    const unit = row.querySelector('.supp-unit').value;
+    const time = row.querySelector('.supp-time').value;
+    return { name: sel==='__other__' ? other : sel, dose: formatDose(amt, unit), time };
+  }).filter(r=>r.name || r.dose);
+}
+document.getElementById('addSupplementBtn').addEventListener('click', ()=>{
+  currentSupplementRows.push({name:'',dose:'',time:''});
+  renderSupplementRows();
+});
+document.getElementById('sameAsYesterdayBtn').addEventListener('click', async ()=>{
+  const y = new Date(selectedDate+'T00:00:00');
+  y.setDate(y.getDate()-1);
+  const yStr = todayISO(y);
+  const data = await storageGet('day:'+yStr);
+  if(!data || !data.supplements || !data.supplements.length){
+    showToast('No supplements logged for '+yStr);
+    return;
+  }
+  currentSupplementRows = data.supplements.map(x => typeof x==='string' ? {name:x, dose:'', time:''} : {name:x.name||'', dose:x.dose||'', time:x.time||''});
+  renderSupplementRows();
+  showToast('Copied supplements from '+yStr);
+});
+
+/* ---------- Generic "same as yesterday" for other sections ---------- */
+async function getYesterdayData(){
+  const y = new Date(selectedDate+'T00:00:00');
+  y.setDate(y.getDate()-1);
+  const yStr = todayISO(y);
+  const data = await storageGet('day:'+yStr);
+  return {data, yStr};
+}
+document.getElementById('sameYesterdayWater').addEventListener('click', async ()=>{
+  const {data, yStr} = await getYesterdayData();
+  if(!data){ showToast('No entry found for '+yStr); return; }
+  waterCount = data.water||0;
+  renderWater();
+  showToast('Copied water intake from '+yStr);
+});
+document.getElementById('sameYesterdayMeals').addEventListener('click', async ()=>{
+  const {data, yStr} = await getYesterdayData();
+  if(!data){ showToast('No entry found for '+yStr); return; }
+  document.getElementById('f_breakfast').value = data.breakfast||'';
+  document.getElementById('f_lunch').value = data.lunch||'';
+  document.getElementById('f_dinner').value = data.dinner||'';
+  document.getElementById('f_snack').value = data.snack||'';
+  showToast('Copied meals from '+yStr);
+});
+document.getElementById('sameYesterdayHrt').addEventListener('click', async ()=>{
+  const {data, yStr} = await getYesterdayData();
+  if(!data){ showToast('No entry found for '+yStr); return; }
+  document.getElementById('f_hrt').value = data.hrt||'';
+  showToast('Copied HRT from '+yStr);
+});
+document.getElementById('sameYesterdayExercise').addEventListener('click', async ()=>{
+  const {data, yStr} = await getYesterdayData();
+  if(!data){ showToast('No entry found for '+yStr); return; }
+  currentExerciseRows = (data.exercises && data.exercises.length)
+    ? data.exercises
+    : (data.exercise ? [{type:'cardio', activity:'Other', duration:'', time:''}] : [{type:'cardio',activity:'',duration:'',time:''}]);
+  renderExerciseRows();
+  showToast('Copied exercise from '+yStr);
+});
+document.getElementById('sameYesterdaySleep').addEventListener('click', async ()=>{
+  const {data, yStr} = await getYesterdayData();
+  if(!data){ showToast('No entry found for '+yStr); return; }
+  document.getElementById('f_bedtime').value = data.bedtime||'';
+  document.getElementById('f_waketime').value = data.waketime||'';
+  document.getElementById('f_wokeTime').value = data.wokeTime||'';
+  sleepQuality = data.sleepQuality||''; wokeNight = data.wokeNight||''; nightSweat = data.nightSweat||'';
+  renderPills('sleepQualityPills', [{value:'poor',label:'Poor'},{value:'fair',label:'Fair'},{value:'good',label:'Good'},{value:'great',label:'Great'}], sleepQuality, v=>sleepQuality=v);
+  renderPills('wokeNightPills', [{value:'no',label:"Didn't wake"},{value:'yes',label:'Woke in the night'}], wokeNight, v=>wokeNight=v);
+  renderPills('nightSweatPills', [{value:'no',label:'No night sweats'},{value:'yes',label:'Woke drenched in sweat'}], nightSweat, v=>nightSweat=v);
+  showToast('Copied sleep from '+yStr);
+});
+document.getElementById('sameYesterdaySymptoms').addEventListener('click', async ()=>{
+  const {data, yStr} = await getYesterdayData();
+  if(!data){ showToast('No entry found for '+yStr); return; }
+  symptomVals = data.symptoms || {};
+  renderSymptoms();
+  showToast('Copied symptoms from '+yStr);
+});
+document.getElementById('sameYesterdayReflection').addEventListener('click', async ()=>{
+  const {data, yStr} = await getYesterdayData();
+  if(!data){ showToast('No entry found for '+yStr); return; }
+  overallMood = data.overallMood||'';
+  renderPills('moodPills', [{value:'good',label:'\uD83D\uDE42 Good'},{value:'meh',label:'\uD83D\uDE10 So-so'},{value:'bad',label:'\uD83D\uDE1E Rough'}], overallMood, v=>overallMood=v);
+  document.getElementById('f_feeling').value = data.feeling||'';
+  document.getElementById('f_hrtWorking').value = data.hrtWorking||'';
+  document.getElementById('f_notes').value = data.notes||'';
+  showToast('Copied reflection from '+yStr);
+});
+
+/* ---------- Exercise rows: cardio / strength ---------- */
+const CARDIO_OPTIONS = ['Walking','Jogging','Running','Swimming','Biking/Cycling','Elliptical','Dance','Hiking','Other'];
+const STRENGTH_OPTIONS = ['Upper body','Lower body','Core','Full body','Other'];
+function activityOptionsFor(type){ return type==='strength' ? STRENGTH_OPTIONS : CARDIO_OPTIONS; }
+let currentExerciseRows = [{type:'cardio', activity:'', duration:'', time:''}];
+function renderExerciseRows(){
+  const c = document.getElementById('exerciseRows');
+  c.innerHTML='';
+  currentExerciseRows.forEach((r, idx)=>{
+    const type = r.type || 'cardio';
+    const activities = activityOptionsFor(type);
+    const row = document.createElement('div');
+    row.style.cssText = 'border:1px solid var(--blush-dk); border-radius:8px; padding:7px; margin-bottom:7px; background:#fffdfb;';
+    row.innerHTML = `
+      <div style="display:flex; gap:5px; align-items:center; margin-bottom:5px;">
+        <select class="ex-type" style="flex:0.8; height:32px; border:1px solid var(--blush-dk); border-radius:6px; font-size:12px; background:#fff;">
+          <option value="cardio" ${type==='cardio'?'selected':''}>Cardio</option>
+          <option value="strength" ${type==='strength'?'selected':''}>Strength</option>
+        </select>
+        <select class="ex-activity" style="flex:1.2; height:32px; border:1px solid var(--blush-dk); border-radius:6px; font-size:12px; background:#fff;">
+          ${activities.map(a=>`<option value="${a}" ${r.activity===a?'selected':''}>${a}</option>`).join('')}
+        </select>
+        <span class="ex-remove" style="cursor:pointer; color:var(--rose); font-weight:700; font-size:16px; padding:0 4px;">&times;</span>
+      </div>
+      <div style="display:flex; gap:5px;">
+        <input type="text" class="ex-duration" placeholder="Minutes" style="flex:0.8; border:1px solid var(--blush-dk); border-radius:6px; height:30px; padding:0 6px; font-size:12px;" value="${r.duration||''}">
+        <select class="ex-time" style="flex:1; border:1px solid var(--blush-dk); border-radius:6px; height:30px; font-size:12px; background:#fff;">
+          <option value="">Time...</option>
+          ${TIME_OF_DAY.map(t=>`<option value="${t}" ${r.time===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+    `;
+    row.querySelector('.ex-type').addEventListener('change', e=>{
+      r.type = e.target.value;
+      r.activity = '';
+      renderExerciseRows();
+    });
+    row.querySelector('.ex-remove').addEventListener('click', ()=>{
+      currentExerciseRows.splice(idx,1);
+      if(currentExerciseRows.length===0) currentExerciseRows.push({type:'cardio',activity:'',duration:'',time:''});
+      renderExerciseRows();
+    });
+    c.appendChild(row);
+  });
+}
+function collectExerciseRows(){
+  return Array.from(document.querySelectorAll('#exerciseRows > div')).map(row=>{
+    const type = row.querySelector('.ex-type').value;
+    const activity = row.querySelector('.ex-activity').value;
+    const duration = row.querySelector('.ex-duration').value;
+    const time = row.querySelector('.ex-time').value;
+    return { type, activity, duration, time };
+  }).filter(r=>r.activity || r.duration);
+}
+document.getElementById('addExerciseBtn').addEventListener('click', ()=>{
+  currentExerciseRows.push({type:'cardio',activity:'',duration:'',time:''});
+  renderExerciseRows();
+});
+function exercisesToText(exercises){
+  if(typeof exercises === 'string') return exercises;
+  return (exercises||[]).map(e=>{
+    if(typeof e==='string') return e;
+    const label = e.type==='strength' ? 'Strength' : 'Cardio';
+    const parts = [`${label}: ${e.activity||''}`.trim()];
+    if(e.duration) parts.push(`${e.duration} min`);
+    if(e.time) parts.push(e.time);
+    return parts.filter(Boolean).join(', ');
+  }).filter(Boolean).join('; ');
+}
+
+/* ---------- HRT medication rows (same pattern as supplements) ---------- */
+const HRT_MED_OPTIONS = ["Estradiol patch","Estradiol pill (oral)","Estradiol cream/gel","Progesterone (oral micronized)",
+  "Progesterone cream","Testosterone cream","Combination patch (estrogen+progesterone)","DHEA cream"];
+const HRT_FREQ_OPTIONS = [
+  {label:'No reminder', days:0},
+  {label:'Daily', days:1},
+  {label:'Every other day', days:2},
+  {label:'Every 3rd day', days:3},
+  {label:'Weekly', days:7},
+  {label:'Every 2 weeks', days:14},
+  {label:'Monthly', days:30},
+];
+function calcNextDue(lastDateStr, days){
+  if(!lastDateStr || !days) return null;
+  const last = new Date(lastDateStr+'T00:00:00');
+  return new Date(last.getTime() + days*86400000);
+}
+function updateNextDueBadge(row){
+  const lastDate = row.querySelector('.hrt-lastdate').value;
+  const days = Number(row.querySelector('.hrt-freq').value) || 0;
+  const badge = row.querySelector('.hrt-nextdue');
+  const next = calcNextDue(lastDate, days);
+  if(!next){ badge.textContent=''; return; }
+  const nextStr = next.toLocaleDateString();
+  const todayD = new Date(todayISO()+'T00:00:00');
+  let color = 'var(--text)', label = 'Next change/dose due';
+  if(next <= todayD){ color = '#B5495B'; label = 'Due now (or overdue)'; }
+  else if((next-todayD)/86400000 <= 1){ color = '#C89B6C'; label = 'Due tomorrow'; }
+  badge.style.color = color;
+  badge.textContent = `${label}: ${nextStr}`;
+}
+let currentHrtMedRows = [{name:'',dose:'',time:'',lastDate:'',freqDays:0}];
+function renderHrtMedRows(){
+  const c = document.getElementById('hrtMedRows');
+  c.innerHTML='';
+  currentHrtMedRows.forEach((r, idx)=>{
+    const isOther = r.name && !HRT_MED_OPTIONS.includes(r.name);
+    const parsed = parseDose(r.dose);
+    const row = document.createElement('div');
+    row.style.cssText = 'border:1px solid var(--blush-dk); border-radius:8px; padding:7px; margin-bottom:7px; background:#fffdfb;';
+    row.innerHTML = `
+      <div style="display:flex; gap:5px; align-items:center; margin-bottom:5px;">
+        <select class="hrt-select" style="flex:1; height:32px; border:1px solid var(--blush-dk); border-radius:6px; font-size:12px; background:#fff;">
+          <option value="">Select...</option>
+          ${HRT_MED_OPTIONS.map(o=>`<option value="${o}" ${r.name===o?'selected':''}>${o}</option>`).join('')}
+          <option value="__other__" ${isOther?'selected':''}>Other...</option>
+        </select>
+        <input type="text" class="hrt-other" placeholder="Name" style="flex:1; display:${isOther?'block':'none'}; border:1px solid var(--blush-dk); border-radius:6px; height:30px; padding:0 6px; font-size:12px;" value="${isOther?r.name:''}">
+        <span class="hrt-remove" style="cursor:pointer; color:var(--rose); font-weight:700; font-size:16px; padding:0 4px;">&times;</span>
+      </div>
+      <div style="display:flex; gap:5px; margin-bottom:5px;">
+        <input type="text" class="hrt-amt" placeholder="Amount" style="flex:0.8; border:1px solid var(--blush-dk); border-radius:6px; height:30px; padding:0 6px; font-size:12px;" value="${parsed.amt}">
+        <select class="hrt-unit" style="flex:0.8; border:1px solid var(--blush-dk); border-radius:6px; height:30px; font-size:12px; background:#fff;">
+          ${DOSE_UNITS.map(u=>`<option value="${u}" ${parsed.unit===u?'selected':''}>${u}</option>`).join('')}
+        </select>
+        <select class="hrt-time" style="flex:1; border:1px solid var(--blush-dk); border-radius:6px; height:30px; font-size:12px; background:#fff;">
+          <option value="">Time...</option>
+          ${TIME_OF_DAY.map(t=>`<option value="${t}" ${r.time===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+      <div style="display:flex; gap:5px; align-items:center;">
+        <input type="date" class="hrt-lastdate" style="flex:1; border:1px solid var(--blush-dk); border-radius:6px; height:30px; padding:0 6px; font-size:11.5px;" value="${r.lastDate||''}">
+        <select class="hrt-freq" style="flex:1; border:1px solid var(--blush-dk); border-radius:6px; height:30px; font-size:11.5px; background:#fff;">
+          ${HRT_FREQ_OPTIONS.map(f=>`<option value="${f.days}" ${Number(r.freqDays)===f.days?'selected':''}>${f.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="hrt-nextdue" style="font-size:11px; font-weight:700; margin-top:4px;"></div>
+    `;
+    row.querySelector('.hrt-select').addEventListener('change', e=>{
+      row.querySelector('.hrt-other').style.display = e.target.value==='__other__' ? 'block' : 'none';
+    });
+    row.querySelector('.hrt-remove').addEventListener('click', ()=>{
+      currentHrtMedRows.splice(idx,1);
+      if(currentHrtMedRows.length===0) currentHrtMedRows.push({name:'',dose:'',time:'',lastDate:'',freqDays:0});
+      renderHrtMedRows();
+    });
+    row.querySelector('.hrt-lastdate').addEventListener('change', ()=>updateNextDueBadge(row));
+    row.querySelector('.hrt-freq').addEventListener('change', ()=>updateNextDueBadge(row));
+    c.appendChild(row);
+    updateNextDueBadge(row);
+  });
+}
+function collectHrtMedRows(){
+  return Array.from(document.querySelectorAll('#hrtMedRows > div')).map(row=>{
+    const sel = row.querySelector('.hrt-select').value;
+    const other = row.querySelector('.hrt-other').value;
+    const amt = row.querySelector('.hrt-amt').value;
+    const unit = row.querySelector('.hrt-unit').value;
+    const time = row.querySelector('.hrt-time').value;
+    const lastDate = row.querySelector('.hrt-lastdate').value;
+    const freqDays = Number(row.querySelector('.hrt-freq').value) || 0;
+    return { name: sel==='__other__' ? other : sel, dose: formatDose(amt, unit), time, lastDate, freqDays };
+  }).filter(r=>r.name || r.dose);
+}
+document.getElementById('addHrtMedBtn').addEventListener('click', ()=>{
+  currentHrtMedRows.push({name:'',dose:'',time:'',lastDate:'',freqDays:0});
+  renderHrtMedRows();
+});
+
+let sleepQuality='', wokeNight='', nightSweat='', overallMood='';
+
+async function loadDay(dateStr){
+  updateDateHeader();
+  const key = 'day:'+dateStr;
+  const data = await storageGet(key) || {};
+  waterCount = data.water || 0; renderWater();
+  document.getElementById('f_breakfast').value = data.breakfast||'';
+  document.getElementById('f_lunch').value = data.lunch||'';
+  document.getElementById('f_dinner').value = data.dinner||'';
+  document.getElementById('f_snack').value = data.snack||'';
+  currentSupplementRows = (data.supplements && data.supplements.length)
+    ? data.supplements.map(x => typeof x==='string' ? {name:x, dose:'', time:''} : {name:x.name||'', dose:x.dose||'', time:x.time||''})
+    : [{name:'',dose:'',time:''}];
+  renderSupplementRows();
+  document.getElementById('f_hrt').value = data.hrt||'';
+  currentExerciseRows = (data.exercises && data.exercises.length)
+    ? data.exercises
+    : (data.exercise ? [{type:'cardio', activity:'Other', duration:'', time:'', legacy:data.exercise}] : [{type:'cardio',activity:'',duration:'',time:''}]);
+  renderExerciseRows();
+  document.getElementById('f_bedtime').value = data.bedtime||'';
+  document.getElementById('f_waketime').value = data.waketime||'';
+  sleepQuality = data.sleepQuality||'';
+  wokeNight = data.wokeNight||'';
+  nightSweat = data.nightSweat||'';
+  overallMood = data.overallMood||'';
+  document.getElementById('f_wokeTime').value = data.wokeTime||'';
+  symptomVals = data.symptoms || {};
+  renderSymptoms();
+  document.getElementById('f_feeling').value = data.feeling||'';
+  document.getElementById('f_hrtWorking').value = data.hrtWorking||'';
+  document.getElementById('f_notes').value = data.notes||'';
+
+  renderPills('sleepQualityPills', [{value:'poor',label:'Poor'},{value:'fair',label:'Fair'},{value:'good',label:'Good'},{value:'great',label:'Great'}], sleepQuality, v=>sleepQuality=v);
+  renderPills('wokeNightPills', [{value:'no',label:"Didn't wake"},{value:'yes',label:'Woke in the night'}], wokeNight, v=>wokeNight=v);
+  renderPills('nightSweatPills', [{value:'no',label:'No night sweats'},{value:'yes',label:'Woke drenched in sweat'}], nightSweat, v=>nightSweat=v);
+  renderPills('moodPills', [{value:'good',label:'\uD83D\uDE42 Good'},{value:'meh',label:'\uD83D\uDE10 So-so'},{value:'bad',label:'\uD83D\uDE1E Rough'}], overallMood, v=>overallMood=v);
+}
+
+document.getElementById('saveToday').addEventListener('click', async ()=>{
+  const key = 'day:'+selectedDate;
+  const data = {
+    water: waterCount,
+    breakfast: document.getElementById('f_breakfast').value,
+    lunch: document.getElementById('f_lunch').value,
+    dinner: document.getElementById('f_dinner').value,
+    snack: document.getElementById('f_snack').value,
+    supplements: collectSupplementRows(),
+    hrt: document.getElementById('f_hrt').value,
+    exercises: collectExerciseRows(),
+    bedtime: document.getElementById('f_bedtime').value,
+    waketime: document.getElementById('f_waketime').value,
+    sleepQuality, wokeNight, nightSweat, overallMood,
+    wokeTime: document.getElementById('f_wokeTime').value,
+    symptoms: symptomVals,
+    feeling: document.getElementById('f_feeling').value,
+    hrtWorking: document.getElementById('f_hrtWorking').value,
+    notes: document.getElementById('f_notes').value,
+  };
+  await storageSet(key, data);
+  showToast(selectedDate===todayISO() ? 'Saved today\u2019s entry' : 'Saved entry for '+selectedDate);
+});
+
+/* ---------- Cycle tracker ---------- */
+let calYear, calMonth; // 0-indexed month
+const FLOW_CYCLE = [null,'light','medium','heavy'];
+
+async function getPeriodData(){
+  const d = await storageGet('periodData');
+  return d || {};
+}
+async function setPeriodDay(iso, flow){
+  const data = await getPeriodData();
+  if(flow===null) delete data[iso]; else data[iso]=flow;
+  await storageSet('periodData', data);
+  return data;
+}
+
+async function renderCalendar(){
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML='';
+  ['S','M','T','W','T','F','S'].forEach(d=>{
+    const el = document.createElement('div'); el.className='dow'; el.textContent=d; grid.appendChild(el);
+  });
+  const first = new Date(calYear, calMonth, 1);
+  const startDow = first.getDay();
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const periodData = await getPeriodData();
+  const todayStr = todayISO();
+
+  for(let i=0;i<startDow;i++){ const e=document.createElement('div'); e.className='cal-day empty'; grid.appendChild(e); }
+  for(let day=1; day<=daysInMonth; day++){
+    const iso = calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+    const el = document.createElement('div');
+    el.className='cal-day' + (periodData[iso]?(' '+periodData[iso]):'') + (iso===todayStr?' today':'');
+    el.textContent = day;
+    el.addEventListener('click', async ()=>{
+      const cur = periodData[iso]||null;
+      const idx = FLOW_CYCLE.indexOf(cur);
+      const next = FLOW_CYCLE[(idx+1)%FLOW_CYCLE.length];
+      await setPeriodDay(iso, next);
+      renderCalendar();
+      renderCycleSummary();
+    });
+    grid.appendChild(el);
+  }
+  document.getElementById('monthLabel').textContent = first.toLocaleDateString(undefined,{month:'long', year:'numeric'});
+}
+
+async function renderCycleSummary(){
+  const periodData = await getPeriodData();
+  const dates = Object.keys(periodData).sort();
+  const summaryEl = document.getElementById('cycleSummary');
+  const noteEl = document.getElementById('menopauseNote');
+  if(dates.length===0){
+    summaryEl.innerHTML = "No period days logged yet. Tap a date above to mark it \u2014 tap again to cycle through light, medium, heavy.";
+    noteEl.innerHTML='';
+    return;
+  }
+  // find "start" days: a logged day with no logged day immediately before it
+  const starts = dates.filter(d=>{
+    const prev = new Date(d+'T00:00:00'); prev.setDate(prev.getDate()-1);
+    return !periodData[todayISO(prev)];
+  });
+  const lastStart = starts[starts.length-1];
+  const lastStartDate = new Date(lastStart+'T00:00:00');
+  const daysSince = Math.floor((new Date(todayISO()+'T00:00:00') - lastStartDate)/86400000);
+  let cycleLenText = '';
+  if(starts.length>=2){
+    const lens=[];
+    for(let i=1;i<starts.length;i++){
+      lens.push(Math.round((new Date(starts[i]+'T00:00:00')-new Date(starts[i-1]+'T00:00:00'))/86400000));
+    }
+    const avg = Math.round(lens.reduce((a,b)=>a+b,0)/lens.length);
+    cycleLenText = `Average cycle length (last ${lens.length}): ${avg} days.`;
+  }
+  summaryEl.innerHTML = `Last period started: <b>${lastStart}</b><br>Days since: <b>${daysSince}</b>${cycleLenText? '<br>'+cycleLenText:''}`;
+
+  if(daysSince >= 365){
+    noteEl.innerHTML = `<div class="menopause-note">It's been 12+ months since your last logged period. Medically, menopause is considered to begin once a full year has passed without one \u2014 worth confirming with your provider.</div>`;
+  } else {
+    noteEl.innerHTML='';
+  }
+}
+
+document.getElementById('prevMonth').addEventListener('click', ()=>{
+  calMonth--; if(calMonth<0){calMonth=11; calYear--;}
+  renderCalendar();
+});
+document.getElementById('nextMonth').addEventListener('click', ()=>{
+  calMonth++; if(calMonth>11){calMonth=0; calYear++;}
+  renderCalendar();
+});
+
+/* ---------- Recipes ---------- */
+const RECIPES = {
+  Breakfasts: [
+    ["Berry Walnut Yogurt Bowl", "Greek yogurt, walnuts, ground flaxseed, mixed berries, honey.", "Spoon yogurt into a bowl. Top with walnuts, flaxseed, berries. Drizzle honey."],
+    ["Spinach & Feta Veggie Omelet", "3 eggs, spinach, mushrooms, feta, avocado.", "Saute spinach & mushrooms. Pour in whisked eggs, cook until set. Top with feta and avocado."],
+    ["Overnight Chia-Oat Cups", "Rolled oats, chia seeds, almond butter, almond milk, cinnamon.", "Combine in a jar, refrigerate overnight, stir and enjoy cold."],
+    ["Green Hormone-Support Smoothie", "Spinach, avocado, protein powder, flax, almond milk, berries.", "Blend until smooth. Add water to thin if needed."],
+    ["Warm Quinoa Breakfast Bowl", "Cooked quinoa, walnuts, berries, cinnamon, milk of choice.", "Warm quinoa, stir in cinnamon and milk. Top with walnuts and berries."],
+  ],
+  Lunches: [
+    ["Salmon & Avocado Green Salad", "Cooked salmon, mixed greens, avocado, olive oil, lemon.", "Arrange greens, top with salmon and avocado, dress with olive oil and lemon."],
+    ["Chicken Quinoa Power Bowl", "Grilled chicken, quinoa, roasted vegetables, tahini.", "Layer quinoa, top with chicken and vegetables, drizzle tahini."],
+    ["Cozy Lentil Soup", "Cooked lentils, carrots, celery, vegetable broth.", "Simmer all ingredients 15 minutes, season to taste."],
+    ["Mediterranean Chickpea Bowl", "Chickpeas, feta, olives, cucumber, olive oil.", "Combine everything in a bowl, drizzle with olive oil, toss and chill."],
+    ["Garlic Shrimp & Greens Bowl", "Shrimp, brown rice, sauteed greens, garlic.", "Saute shrimp with garlic. Serve over rice with greens."],
+  ],
+  Dinners: [
+    ["Baked Salmon & Roasted Veg", "Salmon, Brussels sprouts, sweet potato, olive oil.", "Roast vegetables 20 min at 400\u00b0F, add salmon, bake 12-15 min more."],
+    ["Turkey Chili", "Ground turkey, black beans, diced tomatoes, avocado.", "Brown turkey, add beans & tomatoes, simmer 20 min, top with avocado."],
+    ["Lemon Cod & Asparagus", "Cod fillet, asparagus, quinoa, lemon.", "Bake cod and asparagus 15 min at 400\u00b0F. Squeeze lemon, serve with quinoa."],
+    ["Herb-Roasted Chicken & Root Vegetables", "Chicken, root vegetables, olive oil, herbs.", "Toss vegetables in oil & herbs, roast with chicken 30-35 min at 400\u00b0F."],
+    ["Shrimp Zucchini Scampi", "Shrimp, zucchini noodles, garlic, olive oil, lemon.", "Saute garlic, add shrimp, toss with zucchini noodles and lemon juice."],
+  ],
+  Snacks: [
+    ["Apple & Almond Butter", "Apple slices, almond butter.", "Slice apple, serve with almond butter for dipping."],
+    ["Cinnamon Greek Yogurt", "Greek yogurt, cinnamon.", "Stir cinnamon into yogurt and enjoy."],
+    ["Hummus & Veggie Sticks", "Hummus, carrot & celery sticks.", "Serve hummus with veggie sticks for dipping."],
+    ["Berries & Cottage Cheese", "Cottage cheese, mixed berries.", "Combine in a bowl and enjoy."],
+    ["Dark Chocolate & Almonds", "70%+ dark chocolate square, almonds.", "Portion and enjoy together."],
+  ],
+};
+let currentCat = 'Breakfasts';
+function renderCatTabs(){
+  const c = document.getElementById('catTabs');
+  c.innerHTML='';
+  Object.keys(RECIPES).forEach(cat=>{
+    const t = document.createElement('div');
+    t.className = 'cat-tab' + (cat===currentCat?' selected':'');
+    t.textContent = cat;
+    t.addEventListener('click', ()=>{ currentCat=cat; renderCatTabs(); renderRecipes(); });
+    c.appendChild(t);
+  });
+}
+function renderRecipes(){
+  const cont = document.getElementById('recipeContainer');
+  cont.innerHTML='';
+  RECIPES[currentCat].forEach(([title, ing, method])=>{
+    const d = document.createElement('details');
+    d.className='recipe';
+    d.innerHTML = `<summary>${title}</summary><div class="body"><b>Ingredients:</b> ${ing}<br><b>Method:</b> ${method}</div>`;
+    cont.appendChild(d);
+  });
+}
+
+/* ---------- Workouts ---------- */
+const WORKOUTS = [
+  ["Monday","Strength (full body)","Squats, push-ups, rows, glute bridges, plank"],
+  ["Tuesday","Brisk walk","30-45 min outdoors if possible"],
+  ["Wednesday","Yoga / stretching","20-30 min gentle flow or restorative"],
+  ["Thursday","Strength (full body)","Deadlifts, lunges, overhead press, rows"],
+  ["Friday","Light cardio","20-30 min walk, bike, or swim"],
+  ["Saturday","Active rest","Dance, hike, or play"],
+  ["Sunday","Full rest / restorative","Gentle stretching or a full day off"],
+];
+function renderWorkouts(){
+  const t = document.getElementById('wkTable');
+  t.innerHTML = '<tr><th>Day</th><th>Focus</th><th>Example movements</th></tr>' +
+    WORKOUTS.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('');
+}
+
+/* ---------- Labs & HRT: date-keyed entries (unlimited, shared record per date) ---------- */
+const HORMONES = ["Estradiol (E2)","Progesterone","Total/Free Testosterone","Cortisol (AM)","DHEA-S","SHBG","TSH (thyroid)","FSH"];
+let currentLabDate = todayISO();
+let hormoneVals = {};
+let customMarkers = []; // [{name, value}]
+
+async function getLabDates(){
+  return (await listKeys('labrecord:')).map(k=>k.slice('labrecord:'.length)).sort();
+}
+async function refreshDateSelects(){
+  const dates = await getLabDates();
+  const opts = dates.length
+    ? dates.map(d=>`<option value="${d}" ${d===currentLabDate?'selected':''}>${d}</option>`).join('')
+    : `<option value="${currentLabDate}">${currentLabDate} (new)</option>`;
+  const finalOpts = dates.includes(currentLabDate) ? opts : opts + `<option value="${currentLabDate}" selected>${currentLabDate} (new)</option>`;
+  ['l_dateSelect','h_dateSelect'].forEach(id=>{
+    const sel = document.getElementById(id);
+    if(sel) sel.innerHTML = finalOpts;
+  });
+}
+function renderHormoneFields(){
+  const c = document.getElementById('hormoneFields');
+  c.innerHTML='<label class="field-label">Hormone & lab results</label>';
+  HORMONES.forEach(h=>{
+    const row = document.createElement('div');
+    row.className='hormone-row';
+    row.innerHTML = `<label>${h}</label><input type="text" placeholder="Result" value="${hormoneVals[h]||''}">`;
+    row.querySelector('input').addEventListener('input', e=>{ hormoneVals[h]=e.target.value; });
+    c.appendChild(row);
+  });
+  customMarkers.forEach((m, idx)=>{
+    const row = document.createElement('div');
+    row.className='hormone-row';
+    row.style.gridTemplateColumns = '1.3fr 0.8fr auto';
+    row.innerHTML = `<input type="text" placeholder="Marker name" value="${m.name||''}" style="font-size:12px; border:1px solid var(--blush-dk); border-radius:6px; padding:4px 6px;">
+      <input type="text" placeholder="Result" value="${m.value||''}" style="font-size:12px; border:1px solid var(--blush-dk); border-radius:6px; padding:4px 6px;">
+      <span style="cursor:pointer; color:var(--rose); font-weight:700; padding:0 4px;">&times;</span>`;
+    const inputs = row.querySelectorAll('input');
+    inputs[0].addEventListener('input', e=>{ m.name = e.target.value; });
+    inputs[1].addEventListener('input', e=>{ m.value = e.target.value; });
+    row.querySelector('span').addEventListener('click', ()=>{ customMarkers.splice(idx,1); renderHormoneFields(); });
+    c.appendChild(row);
+  });
+}
+document.getElementById('addMarkerBtn').addEventListener('click', ()=>{
+  customMarkers.push({name:'', value:''});
+  renderHormoneFields();
+});
+
+async function loadLabRecord(dateStr){
+  currentLabDate = dateStr;
+  const data = await storageGet('labrecord:'+dateStr) || {};
+  hormoneVals = data.hormones || {};
+  customMarkers = data.customMarkers || [];
+  renderHormoneFields();
+  document.getElementById('l_recordDate').value = dateStr;
+  document.getElementById('l_date').value = data.testMethod||'';
+  document.getElementById('l_provider').value = data.provider||'';
+  document.getElementById('h_pharmacy').value = data.pharmacy||'';
+  document.getElementById('h_providerNotes').value = data.providerNotes||'';
+  document.getElementById('h_nextDate').value = data.nextDate||'';
+  document.getElementById('h_questions').value = data.questions||'';
+  currentHrtMedRows = (data.medications && data.medications.length)
+    ? data.medications.map(x => typeof x==='string' ? {name:x, dose:'', time:'', lastDate:'', freqDays:0} : {name:x.name||'', dose:x.dose||'', time:x.time||'', lastDate:x.lastDate||'', freqDays:x.freqDays||0})
+    : (data.med ? [{name:data.med, dose:data.dosage||'', time:'', lastDate:'', freqDays:0}] : [{name:'',dose:'',time:'',lastDate:'',freqDays:0}]);
+  renderHrtMedRows();
+  await refreshDateSelects();
+}
+document.getElementById('l_dateSelect').addEventListener('change', e=> loadLabRecord(e.target.value));
+document.getElementById('h_dateSelect').addEventListener('change', e=> loadLabRecord(e.target.value));
+document.getElementById('newLabEntryBtn').addEventListener('click', ()=> loadLabRecord(todayISO()));
+document.getElementById('newHrtEntryBtn').addEventListener('click', ()=> loadLabRecord(todayISO()));
+document.getElementById('l_recordDate').addEventListener('change', e=>{ currentLabDate = e.target.value || todayISO(); });
+
+document.getElementById('saveLabs').addEventListener('click', async ()=>{
+  const dateKey = document.getElementById('l_recordDate').value || todayISO();
+  const existing = await storageGet('labrecord:'+dateKey) || {};
+  existing.hormones = hormoneVals;
+  existing.customMarkers = customMarkers.filter(m=>m.name || m.value);
+  existing.testMethod = document.getElementById('l_date').value;
+  existing.provider = document.getElementById('l_provider').value;
+  await storageSet('labrecord:'+dateKey, existing);
+  currentLabDate = dateKey;
+  await refreshDateSelects();
+  showToast('Lab entry saved');
+});
+document.getElementById('saveHrt').addEventListener('click', async ()=>{
+  const dateKey = currentLabDate || todayISO();
+  const existing = await storageGet('labrecord:'+dateKey) || {};
+  existing.medications = collectHrtMedRows();
+  delete existing.med; delete existing.dosage;
+  existing.pharmacy = document.getElementById('h_pharmacy').value;
+  existing.providerNotes = document.getElementById('h_providerNotes').value;
+  existing.nextDate = document.getElementById('h_nextDate').value;
+  existing.questions = document.getElementById('h_questions').value;
+  await storageSet('labrecord:'+dateKey, existing);
+  await refreshDateSelects();
+  showToast('HRT entry saved');
+});
+
+/* ---------- Supplement guide (reference) ---------- */
+const SUPPLEMENTS_GUIDE = [
+  ["Magnesium glycinate","200-400mg, evening","Sleep, muscle relaxation & stress resilience","Can reduce absorption of some antibiotics (tetracyclines, quinolones) \u2014 space doses apart. Caution with kidney disease."],
+  ["Methylated B-Complex","1 capsule, morning","Energy & stress-hormone support","High-dose B6 long-term has been linked to nerve issues. Folate can mask a B12 deficiency on bloodwork."],
+  ["NADH","5-20mg, morning, empty stomach","Mitochondrial energy & fatigue","Limited interaction data \u2014 caution combining with MAOI medications."],
+  ["Omega-3 (fish/algae oil)","1000-2000mg EPA/DHA","Mood support & inflammation","Can increase bleeding risk \u2014 caution with blood thinners (warfarin, aspirin) or before surgery."],
+  ["Vitamin D3 + K2","1000-2000 IU D3","Bone health & mood","K2 can work against blood thinners like warfarin \u2014 flag this one specifically if on anticoagulants. High-dose D can interact with some diuretics/steroids."],
+  ["Ashwagandha","300-600mg","Cortisol & stress support","Can affect thyroid hormone levels \u2014 caution if on thyroid medication. May interact with sedatives or immunosuppressants. Avoid in pregnancy."],
+  ["Myo-inositol","2-4g/day, split doses","Insulin sensitivity & hormone balance","May enhance the effect of blood sugar-lowering medications \u2014 worth monitoring if diabetic."],
+  ["Probiotic (multi-strain)","As directed, with food","Gut health, tied to hormones","Generally well-tolerated; caution if immunocompromised."],
+  ["Rhodiola rosea","200-600mg standardized extract, morning","Adaptogen for stress, fatigue & immune resilience","Can interact with antidepressants (SSRIs/MAOIs) \u2014 possible serotonin syndrome risk. May lower blood sugar or blood pressure further if already on those medications. Some sources advise avoiding it with bipolar disorder."],
+  ["Liquid multivitamin","As directed on label, morning with food","Broad-spectrum nutrient support, often better absorbed","Check for iron content \u2014 can reduce thyroid medication or certain antibiotic absorption if taken together. Watch for overlap with vitamin D/K2 or other supplements you're already taking to avoid doubling up."],
+];
+function renderSupplementGuide(){
+  const c = document.getElementById('suppTable');
+  c.innerHTML = SUPPLEMENTS_GUIDE.map(r => `
+    <div style="background:var(--blush); border:1px solid var(--blush-dk); border-radius:10px; padding:9px 12px; margin-bottom:8px;">
+      <div style="font-weight:700; color:var(--plum); font-size:13px;">${r[0]}</div>
+      <div style="font-size:11px; color:var(--rose); margin:1px 0 5px;">${r[1]} \u2014 ${r[2]}</div>
+      <div style="font-size:11px; background:#FFF3E0; border:1px solid var(--gold); border-radius:6px; padding:5px 8px; line-height:1.4;">
+        <b>Possible interactions:</b> ${r[3]}
+      </div>
+    </div>
+  `).join('') + `<p style="font-size:10.5px; font-style:italic; margin-top:4px;">This list isn't exhaustive \u2014 always tell your doctor or pharmacist everything you're taking, including supplements, before starting something new.</p>`;
+}
+
+/* ---------- Export for doctor ---------- */
+function csvEscape(cell){
+  const s = String(cell==null ? '' : cell).replace(/"/g,'""');
+  return /[",\n]/.test(s) ? `"${s}"` : s;
+}
+function toCSV(rows){
+  return rows.map(r=>r.map(csvEscape).join(',')).join('\r\n');
+}
+function downloadBlob(filename, content, type){
+  const blob = new Blob([content], {type});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+async function listKeys(prefix){
+  try{
+    const db = await openDB();
+    return await new Promise((resolve)=>{
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const keys = [];
+      const req = store.openKeyCursor ? store.openKeyCursor() : store.openCursor();
+      req.onsuccess = (e)=>{
+        const cursor = e.target.result;
+        if(cursor){
+          if(!prefix || String(cursor.key).startsWith(prefix)) keys.push(cursor.key);
+          cursor.continue();
+        } else resolve(keys);
+      };
+      req.onerror = ()=> resolve([]);
+    });
+  } catch(e){ return []; }
+}
+function suppToText(supplements){
+  return (supplements||[]).map(s=>{
+    if(typeof s==='string') return s;
+    const base = [s.name, s.dose].filter(Boolean).join(' ');
+    return s.time ? `${base} (${s.time})` : base;
+  }).filter(Boolean).join('; ');
+}
+async function buildDailyRows(){
+  const keys = (await listKeys('day:')).sort();
+  const header = ['Date','Day #','Water (glasses)','Breakfast','Lunch','Dinner','Snack','Supplements taken',
+    'HRT taken','Exercise','Bedtime','Wake time','Sleep quality','Woke in night','Woke time','Night sweats','Overall mood',
+    ...SYMPTOMS,'Feeling notes','How supplements/HRT working','Notes'];
+  const rows = [header];
+  for(const k of keys){
+    const dateStr = k.replace('day:','');
+    const data = await storageGet(k);
+    if(!data) continue;
+    const dayNum = Math.floor((new Date(dateStr+'T00:00:00') - programStart)/86400000) + 1;
+    rows.push([
+      dateStr, dayNum, data.water||0, data.breakfast||'', data.lunch||'', data.dinner||'', data.snack||'',
+      suppToText(data.supplements), data.hrt||'', exercisesToText(data.exercises||data.exercise), data.bedtime||'', data.waketime||'',
+      data.sleepQuality||'', data.wokeNight||'', data.wokeTime||'', data.nightSweat||'', data.overallMood||'',
+      ...SYMPTOMS.map(s => (data.symptoms && data.symptoms[s]!=null) ? data.symptoms[s] : ''),
+      data.feeling||'', data.hrtWorking||'', data.notes||''
+    ]);
+  }
+  return rows;
+}
+async function buildLabsRows(){
+  const dates = await getLabDates();
+  const header = ['Date of labs','Testing method','Provider', ...HORMONES, 'Other markers', 'Medications & dosages','Pharmacy','Provider notes','Next appt/recheck','Questions'];
+  const rows = [header];
+  for(const d of dates){
+    const data = await storageGet('labrecord:'+d);
+    if(!data) continue;
+    const customStr = (data.customMarkers||[]).map(m=>`${m.name}: ${m.value}`).filter(Boolean).join('; ');
+    const medStr = (data.medications||[]).map(m=>{
+      const name = typeof m==='string' ? m : m.name;
+      const dose = typeof m==='string' ? '' : m.dose;
+      const time = typeof m==='string' ? '' : m.time;
+      const lastDate = typeof m==='string' ? '' : m.lastDate;
+      const freqDays = typeof m==='string' ? 0 : (m.freqDays||0);
+      let base = [name, dose].filter(Boolean).join(' ');
+      if(time) base += ` (${time})`;
+      if(lastDate && freqDays){
+        const next = calcNextDue(lastDate, freqDays);
+        if(next) base += ` [last: ${lastDate}, next due: ${next.toISOString().slice(0,10)}]`;
+      }
+      return base;
+    }).filter(Boolean).join('; ');
+    rows.push([
+      d, data.testMethod||'', data.provider||'',
+      ...HORMONES.map(h => (data.hormones && data.hormones[h]) || ''),
+      customStr,
+      medStr, data.pharmacy||'', data.providerNotes||'', data.nextDate||'', data.questions||''
+    ]);
+  }
+  return rows;
+}
+function rowsToHtmlTable(rows){
+  if(rows.length===0) return '<p style="font-size:11px;">No entries logged yet.</p>';
+  let html = '<table>';
+  rows.forEach((r,i)=>{
+    const tag = i===0 ? 'th' : 'td';
+    html += '<tr>' + r.map(c=>`<${tag}>${(c==null?'':String(c)).replace(/</g,'&lt;')}</${tag}>`).join('') + '</tr>';
+  });
+  html += '</table>';
+  return html;
+}
+
+document.getElementById('downloadCsvBtn').addEventListener('click', async ()=>{
+  const rows = await buildDailyRows();
+  downloadBlob('bloom_daily_log.csv', toCSV(rows), 'text/csv');
+  showToast('Daily log CSV downloaded');
+});
+document.getElementById('downloadLabsCsvBtn').addEventListener('click', async ()=>{
+  const rows = await buildLabsRows();
+  downloadBlob('bloom_labs_hrt.csv', toCSV(rows), 'text/csv');
+  showToast('Labs CSV downloaded');
+});
+document.getElementById('printReportBtn').addEventListener('click', async ()=>{
+  const dailyRows = await buildDailyRows();
+  const labsRows = await buildLabsRows();
+  document.getElementById('printReport').innerHTML = `
+    <h2 style="font-family:Georgia,serif; color:#6B3F4E;">Bloom Through It \u2014 Doctor Report</h2>
+    <p style="font-size:11px;">Generated ${new Date().toLocaleDateString()}</p>
+    <h3 style="font-size:13px; color:#D98A82;">Hormone labs & HRT</h3>
+    ${rowsToHtmlTable(labsRows)}
+    <h3 style="font-size:13px; color:#D98A82;">Daily log \u2014 supplements, sleep & symptoms</h3>
+    ${rowsToHtmlTable(dailyRows)}
+  `;
+  window.print();
+});
+
+/* ---------- Disclaimer gate ---------- */
+const DISCLAIMER_KEY = 'disclaimerAccepted';
+async function boot(){
+  const accepted = await storageGet(DISCLAIMER_KEY);
+  if(accepted){
+    await runApp();
+  } else {
+    document.getElementById('disclaimerOverlay').style.display = 'block';
+    const checkbox = document.getElementById('disclaimerCheck');
+    const continueBtn = document.getElementById('disclaimerContinue');
+    checkbox.addEventListener('change', ()=>{
+      continueBtn.disabled = !checkbox.checked;
+      continueBtn.style.opacity = checkbox.checked ? '1' : '0.5';
+    });
+    continueBtn.addEventListener('click', async ()=>{
+      if(!checkbox.checked) return;
+      await storageSet(DISCLAIMER_KEY, true);
+      document.getElementById('disclaimerOverlay').style.display = 'none';
+      await runApp();
+    });
+  }
+}
+boot();
+
+/* ---------- Init ---------- */
+async function runApp(){
+  await initDayBadge();
+  renderMenu();
+  await loadDay(selectedDate);
+  const now = new Date();
+  calYear = now.getFullYear(); calMonth = now.getMonth();
+  await renderCalendar();
+  await renderCycleSummary();
+  renderCatTabs(); renderRecipes();
+  renderWorkouts();
+  const existingDates = await getLabDates();
+  currentLabDate = existingDates.length ? existingDates[existingDates.length-1] : todayISO();
+  await loadLabRecord(currentLabDate);
+  renderSupplementGuide();
+}
+</script>
+</body>
+</html>
