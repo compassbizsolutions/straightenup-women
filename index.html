@@ -133,13 +133,14 @@
   .hormone-row label{ font-size:12px; font-weight:600; color:var(--plum); }
 
   #printReport{ display:none; }
-  #printReport table{ width:100%; border-collapse:collapse; font-size:9.5px; margin-bottom:14px; }
-  #printReport th, #printReport td{ border:1px solid #ccc; padding:3px 5px; text-align:left; }
+  #printReport table{ width:100%; border-collapse:collapse; font-size:9px; margin-bottom:14px; table-layout:fixed; }
+  #printReport th, #printReport td{ border:1px solid #ccc; padding:3px 4px; text-align:left; word-wrap:break-word; overflow-wrap:break-word; }
   #printReport th{ background:var(--blush); }
   @media print{
+    @page{ size: landscape; margin: 0.35in; }
     body *{ visibility:hidden; }
     #printReport, #printReport *{ visibility:visible; }
-    #printReport{ display:block; position:absolute; top:0; left:0; width:100%; padding:20px; }
+    #printReport{ display:block; position:absolute; top:0; left:0; width:100%; padding:10px; }
   }
 
   nav.tabbar{ position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:460px;
@@ -1495,6 +1496,26 @@ function suppToText(supplements){
     return s.time ? `${base} (${s.time})` : base;
   }).filter(Boolean).join('; ');
 }
+async function buildDailyRowsForPrint(){
+  const keys = (await listKeys('day:')).sort();
+  const headerA = ['Date','Day #','Water (glasses)','Breakfast','Lunch','Dinner','Snack','Supplements taken','HRT taken','Exercise'];
+  const headerB = ['Date','Day #','Bedtime','Wake time','Sleep quality','Woke in night','Woke time','Night sweats','Overall mood',
+    ...SYMPTOMS,'Feeling notes','How supplements/HRT working','Notes'];
+  const rowsA = [headerA], rowsB = [headerB];
+  for(const k of keys){
+    const dateStr = k.replace('day:','');
+    const data = await storageGet(k);
+    if(!data) continue;
+    const dayNum = Math.floor((new Date(dateStr+'T00:00:00') - programStart)/86400000) + 1;
+    rowsA.push([dateStr, dayNum, data.water||0, data.breakfast||'', data.lunch||'', data.dinner||'', data.snack||'',
+      suppToText(data.supplements), suppToText(data.hrt), exercisesToText(data.exercises||data.exercise)]);
+    rowsB.push([dateStr, dayNum, data.bedtime||'', data.waketime||'', data.sleepQuality||'', data.wokeNight||'', data.wokeTime||'',
+      data.nightSweat||'', data.overallMood||'',
+      ...SYMPTOMS.map(s => (data.symptoms && data.symptoms[s]!=null) ? data.symptoms[s] : ''),
+      data.feeling||'', data.hrtWorking||'', data.notes||'']);
+  }
+  return {rowsA, rowsB};
+}
 async function buildDailyRows(){
   const keys = (await listKeys('day:')).sort();
   const header = ['Date','Day #','Water (glasses)','Breakfast','Lunch','Dinner','Snack','Supplements taken',
@@ -1508,7 +1529,7 @@ async function buildDailyRows(){
     const dayNum = Math.floor((new Date(dateStr+'T00:00:00') - programStart)/86400000) + 1;
     rows.push([
       dateStr, dayNum, data.water||0, data.breakfast||'', data.lunch||'', data.dinner||'', data.snack||'',
-      suppToText(data.supplements), data.hrt||'', exercisesToText(data.exercises||data.exercise), data.bedtime||'', data.waketime||'',
+      suppToText(data.supplements), suppToText(data.hrt), exercisesToText(data.exercises||data.exercise), data.bedtime||'', data.waketime||'',
       data.sleepQuality||'', data.wokeNight||'', data.wokeTime||'', data.nightSweat||'', data.overallMood||'',
       ...SYMPTOMS.map(s => (data.symptoms && data.symptoms[s]!=null) ? data.symptoms[s] : ''),
       data.feeling||'', data.hrtWorking||'', data.notes||''
@@ -1569,17 +1590,22 @@ document.getElementById('downloadLabsCsvBtn').addEventListener('click', async ()
   showToast('Labs CSV downloaded');
 });
 document.getElementById('printReportBtn').addEventListener('click', async ()=>{
-  const dailyRows = await buildDailyRows();
+  const {rowsA, rowsB} = await buildDailyRowsForPrint();
   const labsRows = await buildLabsRows();
   document.getElementById('printReport').innerHTML = `
-    <h2 style="font-family:Georgia,serif; color:#6B3F4E;">Bloom Through It \u2014 Doctor Report</h2>
+    <h2 style="font-family:Georgia,serif; color:#6B3F4E;">Straighten Up \u2014 Women's Health Report</h2>
     <p style="font-size:11px;">Generated ${new Date().toLocaleDateString()}</p>
     <h3 style="font-size:13px; color:#D98A82;">Hormone labs & HRT</h3>
     ${rowsToHtmlTable(labsRows)}
-    <h3 style="font-size:13px; color:#D98A82;">Daily log \u2014 supplements, sleep & symptoms</h3>
-    ${rowsToHtmlTable(dailyRows)}
+    <h3 style="font-size:13px; color:#D98A82;">Daily log \u2014 nutrition, supplements & HRT</h3>
+    ${rowsToHtmlTable(rowsA)}
+    <h3 style="font-size:13px; color:#D98A82;">Daily log \u2014 sleep, mood & symptoms</h3>
+    ${rowsToHtmlTable(rowsB)}
   `;
+  const originalTitle = document.title;
+  document.title = 'straightenup-women-' + todayISO();
   window.print();
+  setTimeout(()=>{ document.title = originalTitle; }, 500);
 });
 
 /* ---------- My Supplements & HRT settings tab ---------- */
