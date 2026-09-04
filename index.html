@@ -221,7 +221,7 @@
       </div>
 
       <div class="acc">
-        <div class="acc-header" data-target="acc-supplements"><span>Supplements & dosages</span><span class="caret">&#9656;</span></div>
+        <div class="acc-header" data-target="acc-supplements"><span>My Supplements</span><span class="caret">&#9656;</span></div>
         <div class="acc-body" id="acc-supplements">
           <div class="pill" id="sameAsYesterdayBtn" style="display:inline-block; margin-bottom:6px; background:var(--gold); border-color:var(--gold); color:#fff;">&#8635; Same as yesterday</div>
           <div id="supplementRows"></div>
@@ -230,10 +230,12 @@
       </div>
 
       <div class="acc">
-        <div class="acc-header" data-target="acc-hrt"><span>Hormone / HRT taken</span><span class="caret">&#9656;</span></div>
+        <div class="acc-header" data-target="acc-hrt"><span>My HRT</span><span class="caret">&#9656;</span></div>
         <div class="acc-body" id="acc-hrt">
           <div class="pill same-yesterday-btn" id="sameYesterdayHrt">&#8635; Same as yesterday</div>
-          <input type="text" id="f_hrt" placeholder="Medication & dose">
+          <label class="field-label">Hormones / HRT taken today</label>
+          <div id="hrtTodayRows"></div>
+          <div class="pill" id="addHrtTodayBtn" style="display:inline-block; margin-top:4px;">+ Add</div>
         </div>
       </div>
 
@@ -347,7 +349,7 @@
     </section>
 
     <section id="tab-hrt">
-      <h2 class="sec-title">HRT tracking</h2>
+      <h2 class="sec-title">My HRT</h2>
       <p class="sec-sub">Scripts, dosages & appointments &mdash; linked to the same lab entry dates.</p>
       <hr class="rule">
       <div style="display:flex; gap:6px; margin-bottom:10px;">
@@ -370,11 +372,32 @@
     </section>
 
     <section id="tab-supplements">
-      <h2 class="sec-title">Supplement guide</h2>
+      <h2 class="sec-title">My Supplements</h2>
       <p class="sec-sub">The core lineup worth knowing about for this season of life.</p>
       <hr class="rule">
       <div id="suppTable"></div>
       <p style="font-size:11.5px; margin-top:10px; color:var(--text);">Log what you actually took each day on the Today page &mdash; this page is just your reference list.</p>
+    </section>
+
+    <section id="tab-mylists">
+      <h2 class="sec-title">My Supplements &amp; HRT</h2>
+      <p class="sec-sub">Add, edit, or mark things as stopped &mdash; this feeds the dropdowns on your Today page.</p>
+      <hr class="rule">
+      <label class="field-label" style="margin-top:0;">My Supplements</label>
+      <div id="mlSupplementList"></div>
+      <div style="display:flex; gap:6px; margin:8px 0 24px;">
+        <select id="mlAddSuppSelect" style="flex:1.4; height:34px; border:1px solid var(--blush-dk); border-radius:6px; font-size:12.5px; background:#fff;"></select>
+        <input type="text" id="mlAddSuppOther" placeholder="Or type a name" style="flex:1;">
+        <span class="pill" id="mlAddSuppBtn" style="white-space:nowrap;">+ Add</span>
+      </div>
+
+      <label class="field-label">My HRT</label>
+      <div id="mlHrtList"></div>
+      <div style="display:flex; gap:6px; margin:8px 0 4px;">
+        <select id="mlAddHrtSelect" style="flex:1.4; height:34px; border:1px solid var(--blush-dk); border-radius:6px; font-size:12.5px; background:#fff;"></select>
+        <input type="text" id="mlAddHrtOther" placeholder="Or type a name" style="flex:1;">
+        <span class="pill" id="mlAddHrtBtn" style="white-space:nowrap;">+ Add</span>
+      </div>
     </section>
 
     <section id="tab-export">
@@ -414,6 +437,31 @@
     </div>
 
     <button class="save-btn" id="disclaimerContinue" disabled style="opacity:0.5;">Continue to my tracker</button>
+  </div>
+</div>
+
+<div id="onboardingOverlay" style="display:none; position:fixed; inset:0; z-index:190; background:var(--cream);
+     overflow-y:auto; -webkit-overflow-scrolling:touch;">
+  <div style="max-width:460px; margin:0 auto; padding:28px 22px 32px;">
+    <h2 style="font-family:Georgia,serif; color:var(--plum); font-size:20px; margin:0 0 4px;">Let's set up your lists</h2>
+    <p style="font-size:12.5px; color:var(--rose); font-style:italic; margin:0 0 18px;">Check off what you currently take &mdash; this builds your own personal lists so daily logging is quick. You can add, edit, or mark things as stopped anytime later in My Supplements &amp; HRT.</p>
+
+    <label class="field-label" style="margin-top:0;">Supplements I currently take</label>
+    <div id="onbSupplementChecks" style="margin:6px 0 4px;"></div>
+    <div style="display:flex; gap:6px; margin:8px 0 20px;">
+      <input type="text" id="onbSupplementOther" placeholder="Add something not listed" style="flex:1;">
+      <span class="pill" id="onbAddSupplementOther" style="white-space:nowrap;">+ Add</span>
+    </div>
+
+    <label class="field-label">Hormones / HRT I currently take</label>
+    <div id="onbHrtChecks" style="margin:6px 0 4px;"></div>
+    <div style="display:flex; gap:6px; margin:8px 0 20px;">
+      <input type="text" id="onbHrtOther" placeholder="Add something not listed" style="flex:1;">
+      <span class="pill" id="onbAddHrtOther" style="white-space:nowrap;">+ Add</span>
+    </div>
+
+    <p style="font-size:11.5px; color:var(--text); margin-bottom:16px;">Not currently taking anything, or not sure yet? That's fine &mdash; skip ahead and add things whenever you're ready.</p>
+    <button class="save-btn" id="onboardingContinue">Continue to my tracker</button>
   </div>
 </div>
 
@@ -484,9 +532,10 @@ const MENU_ITEMS = [
   {tab:'cycle', label:'Period tracker', icon:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'},
   {tab:'recipes', label:'Recipe book', icon:'<path d="M4 19V6a2 2 0 0 1 2-2h12a1 1 0 0 1 1 1v14"/><path d="M4 19a2 2 0 0 0 2 2h12"/>'},
   {tab:'moves', label:'Workouts', icon:'<circle cx="12" cy="5" r="2"/><path d="M7 21l2-8-2-3 3-3 2 2 2-2 3 3-2 3 2 8"/>'},
-  {tab:'supplements', label:'Supplement guide', icon:'<path d="M12 2v6M8 6h8l2 14H6z"/>'},
+  {tab:'supplements', label:'My Supplements', icon:'<path d="M12 2v6M8 6h8l2 14H6z"/>'},
   {tab:'labs', label:'Lab tracking', icon:'<path d="M9 3h6M10 3v5l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/>'},
-  {tab:'hrt', label:'HRT tracking', icon:'<path d="M12 2l2.5 5H20l-4 4 1.5 6L12 14l-5.5 3L8 11 4 7h5.5z"/>'},
+  {tab:'hrt', label:'My HRT', icon:'<path d="M12 2l2.5 5H20l-4 4 1.5 6L12 14l-5.5 3L8 11 4 7h5.5z"/>'},
+  {tab:'mylists', label:'My Supplements & HRT', icon:'<circle cx="12" cy="12" r="9"/><path d="M9 12h6M12 9v6"/>'},
   {tab:'export', label:'Export for doctor', icon:'<path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/>'},
 ];
 function renderMenu(){
@@ -657,11 +706,13 @@ function formatDose(amt, unit){
 const TIME_OF_DAY = ['Morning','Afternoon','Evening','Bedtime','With food','Other'];
 
 let currentSupplementRows = [{name:'',dose:'',time:''}];
-function renderSupplementRows(){
+async function renderSupplementRows(){
   const c = document.getElementById('supplementRows');
   c.innerHTML='';
+  const myList = activeNames(await getMySupplements());
+  const options = myList.length ? myList : SUPPLEMENTS_GUIDE.map(s=>s[0]);
   currentSupplementRows.forEach((r, idx)=>{
-    const isOther = r.name && !SUPPLEMENTS_GUIDE.some(s=>s[0]===r.name);
+    const isOther = r.name && !options.includes(r.name);
     const parsed = parseDose(r.dose);
     const row = document.createElement('div');
     row.style.cssText = 'border:1px solid var(--blush-dk); border-radius:8px; padding:7px; margin-bottom:7px; background:#fffdfb;';
@@ -669,7 +720,7 @@ function renderSupplementRows(){
       <div style="display:flex; gap:5px; align-items:center; margin-bottom:5px;">
         <select class="supp-select" style="flex:1; height:32px; border:1px solid var(--blush-dk); border-radius:6px; font-size:12px; background:#fff;">
           <option value="">Select...</option>
-          ${SUPPLEMENTS_GUIDE.map(s=>`<option value="${s[0]}" ${r.name===s[0]?'selected':''}>${s[0]}</option>`).join('')}
+          ${options.map(name=>`<option value="${name}" ${r.name===name?'selected':''}>${name}</option>`).join('')}
           <option value="__other__" ${isOther?'selected':''}>Other...</option>
         </select>
         <input type="text" class="supp-other" placeholder="Name" style="flex:1; display:${isOther?'block':'none'}; border:1px solid var(--blush-dk); border-radius:6px; height:30px; padding:0 6px; font-size:12px;" value="${isOther?r.name:''}">
@@ -690,6 +741,7 @@ function renderSupplementRows(){
       row.querySelector('.supp-other').style.display = e.target.value==='__other__' ? 'block' : 'none';
     });
     row.querySelector('.supp-remove').addEventListener('click', ()=>{
+      currentSupplementRows = collectSupplementRows();
       currentSupplementRows.splice(idx,1);
       if(currentSupplementRows.length===0) currentSupplementRows.push({name:'',dose:'',time:''});
       renderSupplementRows();
@@ -708,8 +760,70 @@ function collectSupplementRows(){
   }).filter(r=>r.name || r.dose);
 }
 document.getElementById('addSupplementBtn').addEventListener('click', ()=>{
+  currentSupplementRows = collectSupplementRows();
   currentSupplementRows.push({name:'',dose:'',time:''});
   renderSupplementRows();
+});
+
+/* ---------- Today's HRT/hormones (quick daily log) ---------- */
+let currentHrtTodayRows = [{name:'',dose:'',time:''}];
+async function renderHrtTodayRows(){
+  const c = document.getElementById('hrtTodayRows');
+  c.innerHTML='';
+  const myList = activeNames(await getMyHrtMeds());
+  const options = myList.length ? myList : HRT_MED_OPTIONS;
+  currentHrtTodayRows.forEach((r, idx)=>{
+    const isOther = r.name && !options.includes(r.name);
+    const parsed = parseDose(r.dose);
+    const row = document.createElement('div');
+    row.style.cssText = 'border:1px solid var(--blush-dk); border-radius:8px; padding:7px; margin-bottom:7px; background:#fffdfb;';
+    row.innerHTML = `
+      <div style="display:flex; gap:5px; align-items:center; margin-bottom:5px;">
+        <select class="hrtt-select" style="flex:1; height:32px; border:1px solid var(--blush-dk); border-radius:6px; font-size:12px; background:#fff;">
+          <option value="">Select...</option>
+          ${options.map(name=>`<option value="${name}" ${r.name===name?'selected':''}>${name}</option>`).join('')}
+          <option value="__other__" ${isOther?'selected':''}>Other...</option>
+        </select>
+        <input type="text" class="hrtt-other" placeholder="Name" style="flex:1; display:${isOther?'block':'none'}; border:1px solid var(--blush-dk); border-radius:6px; height:30px; padding:0 6px; font-size:12px;" value="${isOther?r.name:''}">
+        <span class="hrtt-remove" style="cursor:pointer; color:var(--rose); font-weight:700; font-size:16px; padding:0 4px;">&times;</span>
+      </div>
+      <div style="display:flex; gap:5px;">
+        <input type="text" class="hrtt-amt" placeholder="Amount" style="flex:0.8; border:1px solid var(--blush-dk); border-radius:6px; height:30px; padding:0 6px; font-size:12px;" value="${parsed.amt}">
+        <select class="hrtt-unit" style="flex:0.8; border:1px solid var(--blush-dk); border-radius:6px; height:30px; font-size:12px; background:#fff;">
+          ${DOSE_UNITS.map(u=>`<option value="${u}" ${parsed.unit===u?'selected':''}>${u}</option>`).join('')}
+        </select>
+        <select class="hrtt-time" style="flex:1; border:1px solid var(--blush-dk); border-radius:6px; height:30px; font-size:12px; background:#fff;">
+          <option value="">Time...</option>
+          ${TIME_OF_DAY.map(t=>`<option value="${t}" ${r.time===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+    `;
+    row.querySelector('.hrtt-select').addEventListener('change', e=>{
+      row.querySelector('.hrtt-other').style.display = e.target.value==='__other__' ? 'block' : 'none';
+    });
+    row.querySelector('.hrtt-remove').addEventListener('click', ()=>{
+      currentHrtTodayRows = collectHrtTodayRows();
+      currentHrtTodayRows.splice(idx,1);
+      if(currentHrtTodayRows.length===0) currentHrtTodayRows.push({name:'',dose:'',time:''});
+      renderHrtTodayRows();
+    });
+    c.appendChild(row);
+  });
+}
+function collectHrtTodayRows(){
+  return Array.from(document.querySelectorAll('#hrtTodayRows > div')).map(row=>{
+    const sel = row.querySelector('.hrtt-select').value;
+    const other = row.querySelector('.hrtt-other').value;
+    const amt = row.querySelector('.hrtt-amt').value;
+    const unit = row.querySelector('.hrtt-unit').value;
+    const time = row.querySelector('.hrtt-time').value;
+    return { name: sel==='__other__' ? other : sel, dose: formatDose(amt, unit), time };
+  }).filter(r=>r.name || r.dose);
+}
+document.getElementById('addHrtTodayBtn').addEventListener('click', ()=>{
+  currentHrtTodayRows = collectHrtTodayRows();
+  currentHrtTodayRows.push({name:'',dose:'',time:''});
+  renderHrtTodayRows();
 });
 document.getElementById('sameAsYesterdayBtn').addEventListener('click', async ()=>{
   const y = new Date(selectedDate+'T00:00:00');
@@ -752,7 +866,8 @@ document.getElementById('sameYesterdayMeals').addEventListener('click', async ()
 document.getElementById('sameYesterdayHrt').addEventListener('click', async ()=>{
   const {data, yStr} = await getYesterdayData();
   if(!data){ showToast('No entry found for '+yStr); return; }
-  document.getElementById('f_hrt').value = data.hrt||'';
+  currentHrtTodayRows = (Array.isArray(data.hrt) && data.hrt.length) ? data.hrt : [{name:'',dose:'',time:''}];
+  renderHrtTodayRows();
   showToast('Copied HRT from '+yStr);
 });
 document.getElementById('sameYesterdayExercise').addEventListener('click', async ()=>{
@@ -832,6 +947,7 @@ function renderExerciseRows(){
       renderExerciseRows();
     });
     row.querySelector('.ex-remove').addEventListener('click', ()=>{
+      currentExerciseRows = collectExerciseRows();
       currentExerciseRows.splice(idx,1);
       if(currentExerciseRows.length===0) currentExerciseRows.push({type:'cardio',activity:'',duration:'',time:''});
       renderExerciseRows();
@@ -849,6 +965,7 @@ function collectExerciseRows(){
   }).filter(r=>r.activity || r.duration);
 }
 document.getElementById('addExerciseBtn').addEventListener('click', ()=>{
+  currentExerciseRows = collectExerciseRows();
   currentExerciseRows.push({type:'cardio',activity:'',duration:'',time:''});
   renderExerciseRows();
 });
@@ -978,7 +1095,10 @@ async function loadDay(dateStr){
     ? data.supplements.map(x => typeof x==='string' ? {name:x, dose:'', time:''} : {name:x.name||'', dose:x.dose||'', time:x.time||''})
     : [{name:'',dose:'',time:''}];
   renderSupplementRows();
-  document.getElementById('f_hrt').value = data.hrt||'';
+  currentHrtTodayRows = Array.isArray(data.hrt) && data.hrt.length
+    ? data.hrt.map(x => typeof x==='string' ? {name:x, dose:'', time:''} : {name:x.name||'', dose:x.dose||'', time:x.time||''})
+    : (typeof data.hrt === 'string' && data.hrt ? [{name:data.hrt, dose:'', time:''}] : [{name:'',dose:'',time:''}]);
+  renderHrtTodayRows();
   currentExerciseRows = (data.exercises && data.exercises.length)
     ? data.exercises
     : (data.exercise ? [{type:'cardio', activity:'Other', duration:'', time:'', legacy:data.exercise}] : [{type:'cardio',activity:'',duration:'',time:''}]);
@@ -1002,16 +1122,15 @@ async function loadDay(dateStr){
   renderPills('moodPills', [{value:'good',label:'\uD83D\uDE42 Good'},{value:'meh',label:'\uD83D\uDE10 So-so'},{value:'bad',label:'\uD83D\uDE1E Rough'}], overallMood, v=>overallMood=v);
 }
 
-document.getElementById('saveToday').addEventListener('click', async ()=>{
-  const key = 'day:'+selectedDate;
-  const data = {
+async function buildTodayData(){
+  return {
     water: waterCount,
     breakfast: document.getElementById('f_breakfast').value,
     lunch: document.getElementById('f_lunch').value,
     dinner: document.getElementById('f_dinner').value,
     snack: document.getElementById('f_snack').value,
     supplements: collectSupplementRows(),
-    hrt: document.getElementById('f_hrt').value,
+    hrt: collectHrtTodayRows(),
     exercises: collectExerciseRows(),
     bedtime: document.getElementById('f_bedtime').value,
     waketime: document.getElementById('f_waketime').value,
@@ -1022,8 +1141,28 @@ document.getElementById('saveToday').addEventListener('click', async ()=>{
     hrtWorking: document.getElementById('f_hrtWorking').value,
     notes: document.getElementById('f_notes').value,
   };
+}
+async function saveTodayEntry(showConfirmation){
+  const key = 'day:'+selectedDate;
+  const data = await buildTodayData();
   await storageSet(key, data);
-  showToast(selectedDate===todayISO() ? 'Saved today\u2019s entry' : 'Saved entry for '+selectedDate);
+  if(showConfirmation){
+    showToast(selectedDate===todayISO() ? 'Saved today\u2019s entry' : 'Saved entry for '+selectedDate);
+  }
+}
+document.getElementById('saveToday').addEventListener('click', ()=> saveTodayEntry(true));
+
+/* Auto-save: any change anywhere in the Today tab quietly saves in the
+   background, so nothing is ever lost by forgetting to tap Save. The
+   explicit button above still gives a confirmation toast for reassurance. */
+let _autoSaveTimer = null;
+document.getElementById('tab-today').addEventListener('input', ()=>{
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(()=> saveTodayEntry(false), 600);
+});
+document.getElementById('tab-today').addEventListener('change', ()=>{
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(()=> saveTodayEntry(false), 300);
 });
 
 /* ---------- Cycle tracker ---------- */
@@ -1443,12 +1582,187 @@ document.getElementById('printReportBtn').addEventListener('click', async ()=>{
   window.print();
 });
 
+/* ---------- My Supplements & HRT settings tab ---------- */
+function myListRowHTML(item, kind){
+  const stopped = item.active===false;
+  return `
+    <div class="basic-card" data-id="${item.id}" data-kind="${kind}" style="${stopped?'opacity:0.6;':''}">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+        <div style="flex:1; font-weight:700; font-size:13.5px; ${stopped?'text-decoration:line-through;':''}">${item.name}</div>
+        <span class="ml-remove" style="cursor:pointer; color:var(--rose); font-weight:700; font-size:16px;">&times;</span>
+      </div>
+      <div style="display:flex; gap:5px; margin-bottom:6px;">
+        <input type="text" class="ml-dose" placeholder="Dose" value="${item.dose||''}" style="flex:1; font-size:12px;">
+        <input type="text" class="ml-time" placeholder="Usual time" value="${item.time||''}" style="flex:1; font-size:12px;">
+      </div>
+      ${stopped ? `
+        <div style="font-size:11.5px; color:var(--rose); margin-bottom:4px;">Stopped ${item.stoppedDate||''}${item.stopReason?': '+item.stopReason:''}</div>
+        <span class="pill ml-resume" style="font-size:11.5px;">&#8635; Resume taking this</span>
+      ` : `
+        <span class="pill ml-stop" style="font-size:11.5px; background:transparent; color:var(--rose); border-color:var(--rose);">Mark as stopped</span>
+        <div class="ml-stop-form" style="display:none; margin-top:8px; background:var(--blush); border-radius:8px; padding:8px;">
+          <label class="field-label" style="margin-top:0;">Date stopped</label>
+          <input type="date" class="ml-stop-date" value="${todayISO()}">
+          <label class="field-label">Why (optional)</label>
+          <input type="text" class="ml-stop-reason" placeholder="e.g. side effects, doctor changed dose...">
+          <span class="pill ml-stop-confirm" style="margin-top:6px; display:inline-block;">Confirm stopped</span>
+        </div>
+      `}
+    </div>`;
+}
+async function saveMyListItem(kind, id, patch){
+  const key = kind==='supp' ? MYLISTS_KEY_SUPP : MYLISTS_KEY_HRT;
+  const list = await storageGet(key) || [];
+  const item = list.find(x=>x.id===id);
+  if(item) Object.assign(item, patch);
+  await storageSet(key, list);
+  return list;
+}
+async function removeMyListItem(kind, id){
+  const key = kind==='supp' ? MYLISTS_KEY_SUPP : MYLISTS_KEY_HRT;
+  const list = (await storageGet(key) || []).filter(x=>x.id!==id);
+  await storageSet(key, list);
+}
+function wireMyListCard(card, kind){
+  const id = card.dataset.id;
+  card.querySelector('.ml-dose').addEventListener('change', e=> saveMyListItem(kind, id, {dose:e.target.value}));
+  card.querySelector('.ml-time').addEventListener('change', e=> saveMyListItem(kind, id, {time:e.target.value}));
+  card.querySelector('.ml-remove').addEventListener('click', async ()=>{
+    await removeMyListItem(kind, id);
+    renderMyLists();
+  });
+  const stopBtn = card.querySelector('.ml-stop');
+  if(stopBtn){
+    stopBtn.addEventListener('click', ()=>{
+      card.querySelector('.ml-stop-form').style.display = 'block';
+    });
+    card.querySelector('.ml-stop-confirm').addEventListener('click', async ()=>{
+      const date = card.querySelector('.ml-stop-date').value || todayISO();
+      const reason = card.querySelector('.ml-stop-reason').value;
+      await saveMyListItem(kind, id, {active:false, stoppedDate:date, stopReason:reason});
+      showToast('Marked as stopped');
+      renderMyLists();
+    });
+  }
+  const resumeBtn = card.querySelector('.ml-resume');
+  if(resumeBtn){
+    resumeBtn.addEventListener('click', async ()=>{
+      await saveMyListItem(kind, id, {active:true, stoppedDate:null, stopReason:''});
+      showToast('Resumed');
+      renderMyLists();
+    });
+  }
+}
+async function renderMyLists(){
+  const supplements = await getMySupplements();
+  const hrtMeds = await getMyHrtMeds();
+  const suppEl = document.getElementById('mlSupplementList');
+  suppEl.innerHTML = supplements.length ? supplements.map(x=>myListRowHTML(x,'supp')).join('') : `<div class="basic-card"><div class="bcmeta">Nothing added yet.</div></div>`;
+  suppEl.querySelectorAll('.basic-card[data-id]').forEach(card=>wireMyListCard(card,'supp'));
+
+  const hrtEl = document.getElementById('mlHrtList');
+  hrtEl.innerHTML = hrtMeds.length ? hrtMeds.map(x=>myListRowHTML(x,'hrt')).join('') : `<div class="basic-card"><div class="bcmeta">Nothing added yet.</div></div>`;
+  hrtEl.querySelectorAll('.basic-card[data-id]').forEach(card=>wireMyListCard(card,'hrt'));
+
+  const suppSelect = document.getElementById('mlAddSuppSelect');
+  suppSelect.innerHTML = `<option value="">Choose to add...</option>` + SUPPLEMENTS_GUIDE.map(s=>`<option value="${s[0]}">${s[0]}</option>`).join('');
+  const hrtSelect = document.getElementById('mlAddHrtSelect');
+  hrtSelect.innerHTML = `<option value="">Choose to add...</option>` + HRT_MED_OPTIONS.map(o=>`<option value="${o}">${o}</option>`).join('');
+}
+async function addToMyList(kind, name){
+  if(!name) return;
+  const key = kind==='supp' ? MYLISTS_KEY_SUPP : MYLISTS_KEY_HRT;
+  const list = await storageGet(key) || [];
+  if(list.some(x=>x.name.toLowerCase()===name.toLowerCase())){ showToast('Already on your list'); return; }
+  list.push(makeListEntry(name));
+  await storageSet(key, list);
+  renderMyLists();
+}
+document.getElementById('mlAddSuppBtn').addEventListener('click', ()=>{
+  const sel = document.getElementById('mlAddSuppSelect').value;
+  const other = document.getElementById('mlAddSuppOther').value.trim();
+  addToMyList('supp', other || sel);
+  document.getElementById('mlAddSuppOther').value = '';
+  document.getElementById('mlAddSuppSelect').value = '';
+});
+document.getElementById('mlAddHrtBtn').addEventListener('click', ()=>{
+  const sel = document.getElementById('mlAddHrtSelect').value;
+  const other = document.getElementById('mlAddHrtOther').value.trim();
+  addToMyList('hrt', other || sel);
+  document.getElementById('mlAddHrtOther').value = '';
+  document.getElementById('mlAddHrtSelect').value = '';
+});
+
+function genId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+/* ---------- My Supplements / My HRT (personal lists, set up during onboarding) ---------- */
+const MYLISTS_KEY_SUPP = 'mySupplements';
+const MYLISTS_KEY_HRT = 'myHrtMeds';
+async function getMySupplements(){ return (await storageGet(MYLISTS_KEY_SUPP)) || []; }
+async function getMyHrtMeds(){ return (await storageGet(MYLISTS_KEY_HRT)) || []; }
+function activeNames(list){ return list.filter(x=>x.active!==false).map(x=>x.name); }
+
+let _onbCustomSupplements = [];
+let _onbCustomHrt = [];
+function renderOnboardingChecks(){
+  const suppEl = document.getElementById('onbSupplementChecks');
+  suppEl.innerHTML = SUPPLEMENTS_GUIDE.map((s,i)=>`
+    <label style="display:flex; align-items:center; gap:8px; padding:6px 0; font-size:13px;">
+      <input type="checkbox" class="onb-supp-check" value="${s[0]}" style="width:16px; height:16px; flex-shrink:0;"> ${s[0]}
+    </label>`).join('');
+  const hrtEl = document.getElementById('onbHrtChecks');
+  hrtEl.innerHTML = HRT_MED_OPTIONS.map(o=>`
+    <label style="display:flex; align-items:center; gap:8px; padding:6px 0; font-size:13px;">
+      <input type="checkbox" class="onb-hrt-check" value="${o}" style="width:16px; height:16px; flex-shrink:0;"> ${o}
+    </label>`).join('');
+}
+document.getElementById('onbAddSupplementOther').addEventListener('click', ()=>{
+  const input = document.getElementById('onbSupplementOther');
+  const name = input.value.trim();
+  if(!name) return;
+  _onbCustomSupplements.push(name);
+  const el = document.getElementById('onbSupplementChecks');
+  el.insertAdjacentHTML('beforeend', `<label style="display:flex; align-items:center; gap:8px; padding:6px 0; font-size:13px;"><input type="checkbox" class="onb-supp-check" value="${name}" checked style="width:16px; height:16px; flex-shrink:0;"> ${name}</label>`);
+  input.value = '';
+});
+document.getElementById('onbAddHrtOther').addEventListener('click', ()=>{
+  const input = document.getElementById('onbHrtOther');
+  const name = input.value.trim();
+  if(!name) return;
+  _onbCustomHrt.push(name);
+  const el = document.getElementById('onbHrtChecks');
+  el.insertAdjacentHTML('beforeend', `<label style="display:flex; align-items:center; gap:8px; padding:6px 0; font-size:13px;"><input type="checkbox" class="onb-hrt-check" value="${name}" checked style="width:16px; height:16px; flex-shrink:0;"> ${name}</label>`);
+  input.value = '';
+});
+function makeListEntry(name){
+  return { id: genId(), name, dose:'', time:'', active:true, startDate: todayISO(), stoppedDate:null, stopReason:'' };
+}
+document.getElementById('onboardingContinue').addEventListener('click', async ()=>{
+  const supplements = Array.from(document.querySelectorAll('.onb-supp-check:checked')).map(el=>makeListEntry(el.value));
+  const hrtMeds = Array.from(document.querySelectorAll('.onb-hrt-check:checked')).map(el=>makeListEntry(el.value));
+  await storageSet(MYLISTS_KEY_SUPP, supplements);
+  await storageSet(MYLISTS_KEY_HRT, hrtMeds);
+  await storageSet(ONBOARDING_KEY, true);
+  document.getElementById('onboardingOverlay').style.display = 'none';
+  await runApp();
+});
+
 /* ---------- Disclaimer gate ---------- */
 const DISCLAIMER_KEY = 'disclaimerAccepted';
+const ONBOARDING_KEY = 'onboardingComplete';
+async function proceedPastDisclaimer(){
+  const onboarded = await storageGet(ONBOARDING_KEY);
+  if(onboarded){
+    await runApp();
+  } else {
+    renderOnboardingChecks();
+    document.getElementById('onboardingOverlay').style.display = 'block';
+  }
+}
 async function boot(){
   const accepted = await storageGet(DISCLAIMER_KEY);
   if(accepted){
-    await runApp();
+    await proceedPastDisclaimer();
   } else {
     document.getElementById('disclaimerOverlay').style.display = 'block';
     const checkbox = document.getElementById('disclaimerCheck');
@@ -1461,7 +1775,7 @@ async function boot(){
       if(!checkbox.checked) return;
       await storageSet(DISCLAIMER_KEY, true);
       document.getElementById('disclaimerOverlay').style.display = 'none';
-      await runApp();
+      await proceedPastDisclaimer();
     });
   }
 }
@@ -1482,6 +1796,7 @@ async function runApp(){
   currentLabDate = existingDates.length ? existingDates[existingDates.length-1] : todayISO();
   await loadLabRecord(currentLabDate);
   renderSupplementGuide();
+  await renderMyLists();
 }
 </script>
 </body>
